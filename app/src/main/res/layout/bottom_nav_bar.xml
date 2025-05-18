@@ -3,47 +3,65 @@
     android:layout_width="match_parent"
     android:layout_height="64dp"
     android:orientation="horizontal"
-    android:background="#F5F6FA"
-    android:gravity="center">
+    android:background="#FFFFFF"
+    android:elevation="8dp"
+    android:gravity="center"
+    android:padding="8dp"
+    android:layout_gravity="bottom">
 
     <ImageView
         android:id="@+id/navHome"
         android:layout_width="0dp"
-        android:layout_height="32dp"
+        android:layout_height="40dp"
         android:layout_weight="1"
         android:src="@drawable/ic_nav_home"
-        android:contentDescription="Home" />
+        android:contentDescription="Home"
+        android:layout_margin="4dp"
+        android:tint="#000000"
+        android:scaleType="centerInside"/>
 
     <ImageView
         android:id="@+id/navPlay"
         android:layout_width="0dp"
-        android:layout_height="32dp"
+        android:layout_height="40dp"
         android:layout_weight="1"
         android:src="@drawable/ic_nav_play"
-        android:contentDescription="Play" />
+        android:contentDescription="Play"
+        android:layout_margin="4dp"
+        android:tint="#000000"
+        android:scaleType="centerInside"/>
 
     <ImageView
         android:id="@+id/navStats"
         android:layout_width="0dp"
-        android:layout_height="32dp"
+        android:layout_height="40dp"
         android:layout_weight="1"
         android:src="@drawable/ic_nav_stats"
-        android:contentDescription="Stats" />
+        android:contentDescription="Stats"
+        android:layout_margin="4dp"
+        android:tint="#000000"
+        android:scaleType="centerInside"/>
 
     <ImageView
         android:id="@+id/navProfile"
         android:layout_width="0dp"
-        android:layout_height="32dp"
+        android:layout_height="40dp"
         android:layout_weight="1"
         android:src="@drawable/ic_nav_profile"
-        android:contentDescription="Profile" />
+        android:contentDescription="Profile"
+        android:layout_margin="4dp"
+        android:tint="#000000"
+        android:scaleType="centerInside"/>
 
     <ImageView
         android:id="@+id/navSettings"
         android:layout_width="0dp"
-        android:layout_height="32dp"
+        android:layout_height="40dp"
         android:layout_weight="1"
         android:src="@drawable/ic_nav_settings"
-        android:contentDescription="Settings" />
+        android:contentDescription="Settings"
+        android:layout_margin="4dp"
+        android:tint="#000000"
+        android:scaleType="centerInside"/>
 
 </LinearLayout>

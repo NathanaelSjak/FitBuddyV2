@@ -1,6 +1,8 @@
 package com.example.fitbuddy.data.repository
 
 import com.example.fitbuddy.data.model.User
+import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.tasks.await
@@ -74,5 +76,53 @@ class AuthRepository {
 
     fun signOut() {
         auth.signOut()
+    }
+
+    fun deleteUser(): Task<Void> {
+        val user = auth.currentUser
+        return if (user != null) {
+            val userRef = usersRef.child(user.uid)
+            userRef.removeValue().continueWithTask { task ->
+                if (task.isSuccessful) {
+                    user.delete()
+                } else {
+                    task.exception?.let { throw it }
+                    user.delete()
+                }
+            }
+        } else {
+            throw Exception("No authenticated user found")
+        }
+    }
+
+    fun checkCurrentPassword(password: String): Task<Void> {
+        val user = FirebaseAuth.getInstance().currentUser
+        return if (user != null) {
+            val email = user.email
+            if (email != null) {
+                val credential = EmailAuthProvider.getCredential(email, password)
+                user.reauthenticate(credential)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            task.result
+                        } else {
+                            throw Exception("Current password is incorrect")
+                        }
+                    }
+            } else {
+                throw Exception("User email not found")
+            }
+        } else {
+            throw Exception("No authenticated user found")
+        }
+    }
+
+    fun updatePassword(newPassword: String): Task<Void> {
+        val user = FirebaseAuth.getInstance().currentUser
+        return if (user != null) {
+            user.updatePassword(newPassword)
+        } else {
+            throw Exception("No authenticated user found")
+        }
     }
 }

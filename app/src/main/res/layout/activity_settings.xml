@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:background="@color/white">
+    android:padding="16dp"
+    android:background="@android:color/white">
 
     <TextView
         android:layout_width="wrap_content"
@@ -12,6 +12,50 @@
         android:text="Settings"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="@color/navy_blue"/>
+        android:textColor="@android:color/darker_gray"
+        android:layout_marginBottom="32dp"
+        android:layout_gravity="center"/>
+
+    <Button
+        android:id="@+id/btnNotifications"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Notifications"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@android:color/holo_blue_dark"
+        android:drawableLeft="@android:drawable/ic_dialog_info"
+        android:drawablePadding="16dp"
+        android:textSize="16sp"
+        android:padding="12dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="start|center_vertical"
+        />
+
+    <Button
+        android:id="@+id/btnPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Password"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@android:color/holo_blue_dark"
+        android:drawableLeft="@android:drawable/ic_lock_lock"
+        android:drawablePadding="16dp"
+        android:textSize="16sp"
+        android:padding="12dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="start|center_vertical"/>
+
+    <Button
+        android:id="@+id/btnDeleteAccount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Delete Account"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@android:color/holo_blue_dark"
+        android:drawableLeft="@android:drawable/ic_delete"
+        android:drawablePadding="16dp"
+        android:textSize="16sp"
+        android:padding="12dp"
+        android:gravity="start|center_vertical"/>
 
 </LinearLayout>

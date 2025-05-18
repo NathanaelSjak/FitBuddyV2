@@ -21,8 +21,12 @@
             android:layout_height="wrap_content"
             android:text="FB"
             android:textColor="@color/gold_yellow"
-            android:textSize="48sp"
-            android:textStyle="bold" />
+            android:textSize="72sp"
+            android:textStyle="bold"
+            android:shadowColor="@android:color/black"
+            android:shadowDx="2"
+            android:shadowDy="2"
+            android:shadowRadius="4" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -31,29 +35,35 @@
             android:layout_marginBottom="48dp"
             android:text="FITBUDDY"
             android:textColor="@color/white"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.5"
+            android:alpha="0.85"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRegister"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="56dp"
             android:text="Register"
             android:textColor="@color/navy_blue"
             android:textStyle="bold"
-            app:cornerRadius="25dp"
-            app:backgroundTint="@color/white" />
+            app:cornerRadius="28dp"
+            app:backgroundTint="@color/white"
+            android:elevation="4dp"
+            android:layout_marginBottom="16dp"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnLogin"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="56dp"
             android:layout_marginTop="16dp"
             android:text="Login"
             android:textColor="@color/navy_blue"
             android:textStyle="bold"
-            app:cornerRadius="25dp"
-            app:backgroundTint="@color/white" />
+            app:cornerRadius="28dp"
+            app:backgroundTint="@color/white"
+            android:elevation="4dp"/>
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
