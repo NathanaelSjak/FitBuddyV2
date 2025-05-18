@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="64dp"
+    android:orientation="horizontal"
+    android:background="#F5F6FA"
+    android:gravity="center">
+
+    <ImageView
+        android:id="@+id/navHome"
+        android:layout_width="0dp"
+        android:layout_height="32dp"
+        android:layout_weight="1"
+        android:src="@drawable/ic_nav_home"
+        android:contentDescription="Home" />
+
+    <ImageView
+        android:id="@+id/navPlay"
+        android:layout_width="0dp"
+        android:layout_height="32dp"
+        android:layout_weight="1"
+        android:src="@drawable/ic_nav_play"
+        android:contentDescription="Play" />
+
+    <ImageView
+        android:id="@+id/navStats"
+        android:layout_width="0dp"
+        android:layout_height="32dp"
+        android:layout_weight="1"
+        android:src="@drawable/ic_nav_stats"
+        android:contentDescription="Stats" />
+
+    <ImageView
+        android:id="@+id/navProfile"
+        android:layout_width="0dp"
+        android:layout_height="32dp"
+        android:layout_weight="1"
+        android:src="@drawable/ic_nav_profile"
+        android:contentDescription="Profile" />
+
+    <ImageView
+        android:id="@+id/navSettings"
+        android:layout_width="0dp"
+        android:layout_height="32dp"
+        android:layout_weight="1"
+        android:src="@drawable/ic_nav_settings"
+        android:contentDescription="Settings" />
+
+</LinearLayout>
