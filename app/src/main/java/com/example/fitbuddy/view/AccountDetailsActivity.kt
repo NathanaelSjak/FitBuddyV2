@@ -35,8 +35,8 @@ class AccountDetailsActivity : AppCompatActivity() {
                 binding.etEmail.setText(snapshot.child("email").getValue(String::class.java) ?: "")
                 binding.etMobileNumber.setText(snapshot.child("mobileNumber").getValue(String::class.java) ?: "")
                 binding.etBirthDate.setText(snapshot.child("birthDate").getValue(String::class.java) ?: "")
-                binding.etWeight.setText((snapshot.child("weight").getValue(Number::class.java)?.toString() ?: ""))
-                binding.etHeight.setText((snapshot.child("height").getValue(Number::class.java)?.toString() ?: ""))
+                binding.etWeight.setText(snapshot.child("weight").getValue(Double::class.java)?.toString() ?: "")
+                binding.etHeight.setText(snapshot.child("height").getValue(Double::class.java)?.toString() ?: "")
                 val profileImageUrl = snapshot.child("profileImageUrl").getValue(String::class.java) ?: ""
                 if (profileImageUrl.isNotEmpty()) {
                     Glide.with(this@AccountDetailsActivity).load(profileImageUrl).into(binding.ivProfileImage)

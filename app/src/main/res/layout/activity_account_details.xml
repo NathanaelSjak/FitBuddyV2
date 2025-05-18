@@ -106,13 +106,13 @@
             android:textColor="@color/navy_blue"
             app:cornerRadius="25dp" />
 
-    </LinearLayout>
+        <include
+            android:id="@+id/bottomNavBar"
+            layout="@layout/bottom_nav_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom" />
 
-    <include
-        android:id="@+id/bottomNavBar"
-        layout="@layout/bottom_nav_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom" />
+    </LinearLayout>
 
 </ScrollView>
