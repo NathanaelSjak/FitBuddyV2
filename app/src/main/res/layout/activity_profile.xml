@@ -277,7 +277,7 @@
     <!-- Bottom Navigation Bar (Placeholder) -->
     <include
         android:id="@+id/bottomNavBar"
-        layout="@layout/bottom_nav_bar"
+        layout="@layout/activity_bottom_nav_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
