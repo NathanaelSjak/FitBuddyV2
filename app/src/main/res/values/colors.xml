@@ -7,4 +7,9 @@
     <color name="black">#000000</color>
     <color name="light_gray">#E0E0E0</color>
     <color name="transparent_white">#33FFFFFF</color>
+    <color name="navy_blue_light">#273B6A</color>
+    <color name="light_blue">#E6F0FF</color>
+    <color name="black_transparent">#99000000</color>
+    <color name="text_secondary">#757575</color>
+    <color name="progress_track">#E0E0E0</color>
 </resources>

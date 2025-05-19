@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.fitbuddy.R
 import com.example.fitbuddy.databinding.ActivityRegister4Binding
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -45,6 +46,7 @@ class RegisterActivity4 : AppCompatActivity() {
 
         DatePickerDialog(
             this,
+            R.style.CustomDatePickerDialog,
             { _, selectedYear, selectedMonth, selectedDay ->
                 calendar.set(selectedYear, selectedMonth, selectedDay)
                 binding.etBirthDate.setText(dateFormatter.format(calendar.time))
