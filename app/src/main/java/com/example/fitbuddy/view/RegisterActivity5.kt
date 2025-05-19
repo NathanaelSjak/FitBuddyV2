@@ -171,7 +171,7 @@ class RegisterActivity5 : AppCompatActivity() {
                             this@RegisterActivity5,
                             "success", Toast.LENGTH_SHORT
                         )
-//                        startActivity(Intent(this@RegisterActivity5, HomeActivity::class.java))
+                        startActivity(Intent(this@RegisterActivity5, ProfileActivity::class.java))
                         finishAffinity()
                     },
                     onFailure = { exception ->
