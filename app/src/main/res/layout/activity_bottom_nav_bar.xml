@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/bottomNavigation"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/navy_blue"
+    android:orientation="horizontal"
+    android:paddingVertical="16dp"
+    android:layout_alignParentBottom="true"> <!-- Corrected to align the bottom -->
+
+    <ImageView
+        android:id="@+id/navHome"
+        android:layout_width="0dp"
+        android:layout_height="24dp"
+        android:layout_weight="1"
+        android:src="@drawable/ic_home"
+        android:tint="@color/white" />
+
+    <ImageView
+        android:id="@+id/navPlay"
+        android:layout_width="0dp"
+        android:layout_height="24dp"
+        android:layout_weight="1"
+        android:src="@drawable/ic_video"
+        android:tint="@color/white" />
+
+    <ImageView
+        android:id="@+id/navStats"
+        android:layout_width="0dp"
+        android:layout_height="24dp"
+        android:layout_weight="1"
+        android:src="@drawable/ic_nav_stats"
+        android:tint="@color/white" />
+
+    <ImageView
+        android:id="@+id/navProfile"
+        android:layout_width="0dp"
+        android:layout_height="24dp"
+        android:layout_weight="1"
+        android:src="@drawable/ic_profile"
+        android:tint="@color/white" />
+</LinearLayout>

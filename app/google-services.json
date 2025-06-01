@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "253611155152",
+    "firebase_url": "https://fitbuddy-8eef5-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "fitbuddy-8eef5",
+    "storage_bucket": "fitbuddy-8eef5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:253611155152:android:7952f543d4b20e9e5d48d5",
+        "android_client_info": {
+          "package_name": "com.example.fitbuddy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2rhWnNWbMkXd1vA_B6Pjq7lup_g8io4c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

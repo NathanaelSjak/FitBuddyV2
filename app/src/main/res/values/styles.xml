@@ -1,0 +1,10 @@
+<resources>
+    <!-- ... existing styles ... -->
+    <style name="CustomDatePickerDialog" parent="Theme.MaterialComponents.Light.Dialog">
+        <item name="colorPrimary">@color/navy_blue</item>
+        <item name="colorPrimaryVariant">@color/navy_blue</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:textColorPrimary">@color/navy_blue</item>
+        <item name="android:windowBackground">@color/white</item>
+    </style>
+</resources>
