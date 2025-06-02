@@ -3,7 +3,6 @@ package com.example.fitbuddy.view
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -12,7 +11,6 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.fitbuddy.R
 import com.example.fitbuddy.data.FitBuddyDbHelper
 import com.example.fitbuddy.data.ExerciseDao
-import com.example.fitbuddy.data.ExerciseEntity
 import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {

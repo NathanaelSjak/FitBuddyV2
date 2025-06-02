@@ -12,8 +12,8 @@ class ExerciseDao(private val dbHelper: FitBuddyDbHelper) {
         val values = ContentValues().apply {
             put("name", exercise.name)
             put("reps_or_time", exercise.repsOrTime)
-            put("video_url", exercise.videoUrl)
-            put("image_res_id", exercise.imageResId)
+            put("video_resource_name", exercise.videoResourceName)
+            put("image_resource_name", exercise.imageResourceName)
             put("category_id", exercise.categoryId)
         }
         db.insert("exercises", null, values)
@@ -41,8 +41,8 @@ class ExerciseDao(private val dbHelper: FitBuddyDbHelper) {
                 id = cursor.getLong(cursor.getColumnIndexOrThrow("id")),
                 name = cursor.getString(cursor.getColumnIndexOrThrow("name")),
                 repsOrTime = cursor.getString(cursor.getColumnIndexOrThrow("reps_or_time")),
-                videoUrl = cursor.getString(cursor.getColumnIndexOrThrow("video_url")),
-                imageResId = cursor.getInt(cursor.getColumnIndexOrThrow("image_res_id")),
+                videoResourceName = cursor.getString(cursor.getColumnIndexOrThrow("video_resource_name")),
+                imageResourceName = cursor.getString(cursor.getColumnIndexOrThrow("image_resource_name")),
                 categoryId = cursor.getLong(cursor.getColumnIndexOrThrow("category_id"))
             )
             exercises.add(exercise)
@@ -71,8 +71,8 @@ class ExerciseDao(private val dbHelper: FitBuddyDbHelper) {
                     id = cursor.getLong(cursor.getColumnIndexOrThrow("id")),
                     name = cursor.getString(cursor.getColumnIndexOrThrow("name")),
                     repsOrTime = cursor.getString(cursor.getColumnIndexOrThrow("reps_or_time")),
-                    videoUrl = cursor.getString(cursor.getColumnIndexOrThrow("video_url")),
-                    imageResId = cursor.getInt(cursor.getColumnIndexOrThrow("image_res_id")),
+                    videoResourceName = cursor.getString(cursor.getColumnIndexOrThrow("video_resource_name")),
+                    imageResourceName = cursor.getString(cursor.getColumnIndexOrThrow("image_resource_name")),
                     categoryId = cursor.getLong(cursor.getColumnIndexOrThrow("category_id"))
                 )
             )
@@ -101,10 +101,10 @@ class ExerciseDao(private val dbHelper: FitBuddyDbHelper) {
 
     fun insertDefaultExercises(context: Context) {
         val defaultExercises = listOf(
-            ExerciseEntity(0, "Crunches", "x10", null, R.drawable.ic_abs, getCategoryId("Abs", "Beginner")),
-            ExerciseEntity(0, "Plank", "00:20", null, R.drawable.ic_abs, getCategoryId("Abs", "Beginner")),
-            ExerciseEntity(0, "Push-Ups", "x15", null, R.drawable.ic_chest, getCategoryId("Chest", "Intermediate")),
-            ExerciseEntity(0, "Squats", "x15", null, R.drawable.ic_legs, getCategoryId("Legs", "Beginner"))
+            ExerciseEntity(0, "Crunches", "x10", "crunches_video", "crunches_image", getCategoryId("Abs", "Beginner")),
+            ExerciseEntity(0, "Plank", "00:20", "plank_video", "plank_image", getCategoryId("Abs", "Beginner")),
+            ExerciseEntity(0, "Push-Ups", "x15", null, "chest_exercise", getCategoryId("Chest", "Intermediate")),
+            ExerciseEntity(0, "Squats", "x15", null, "legs_exercise", getCategoryId("Legs", "Beginner"))
         )
         for (ex in defaultExercises) {
             insertExercise(ex)

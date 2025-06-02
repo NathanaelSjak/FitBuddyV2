@@ -141,7 +141,7 @@ class UserProgressDao(private val dbHelper: FitBuddyDbHelper) {
         }
     }
 
-    fun updatePoints(points: Int) {
+    fun updatePoints(points: Int): Boolean {
         val db = dbHelper.writableDatabase
         db.beginTransaction()
         try {
@@ -159,9 +159,10 @@ class UserProgressDao(private val dbHelper: FitBuddyDbHelper) {
                 put("points", points)
             }
 
-            if (cursor.count > 0) {
+            val success = if (cursor.count > 0) {
                 val rows = db.update("user_stats", values, "id = 1", null)
                 Log.d("UserProgressDao", "Updated user_stats points, rows affected: $rows")
+                rows > 0
             } else {
                 values.apply {
                     put("id", 1)
@@ -171,15 +172,17 @@ class UserProgressDao(private val dbHelper: FitBuddyDbHelper) {
                 }
                 val id = db.insert("user_stats", null, values)
                 Log.d("UserProgressDao", "Created new user_stats record with ID: $id")
+                id != -1L
             }
             cursor.close()
             
             db.setTransactionSuccessful()
             Log.d("UserProgressDao", "Successfully updated points to: $points")
+            return success
         } catch (e: Exception) {
             Log.e("UserProgressDao", "Error updating points: ${e.message}")
             e.printStackTrace()
-            throw e
+            return false
         } finally {
             db.endTransaction()
         }

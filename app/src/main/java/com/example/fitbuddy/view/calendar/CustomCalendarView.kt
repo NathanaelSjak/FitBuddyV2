@@ -45,11 +45,10 @@ class CustomCalendarView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        // Get the date cell bounds and draw backgrounds
         val today = dateFormat.format(Date())
         val cellWidth = width / 7f
         val cellHeight = height / 7f
-        val startY = cellHeight // Skip the header row
+        val startY = cellHeight
 
         for (week in 0 until 6) {
             for (day in 0 until 7) {

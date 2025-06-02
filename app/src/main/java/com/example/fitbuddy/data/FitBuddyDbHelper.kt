@@ -10,10 +10,14 @@ class FitBuddyDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
     
     companion object {
         const val DATABASE_NAME = "FitBuddy.db"
-        const val DATABASE_VERSION = 15
+        const val DATABASE_VERSION = 26
     }
 
     override fun onCreate(db: SQLiteDatabase) {
+        createTables(db)
+    }
+
+    private fun createTables(db: SQLiteDatabase) {
         Log.d("DB", "Creating new database tables...")
         
         try {
@@ -56,8 +60,8 @@ class FitBuddyDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
                     reps_or_time TEXT NOT NULL,
-                    video_url TEXT,
-                    image_res_id INTEGER NOT NULL,
+                    video_resource_name TEXT,
+                    image_resource_name TEXT NOT NULL,
                     category_id INTEGER NOT NULL,
                     FOREIGN KEY(category_id) REFERENCES workout_categories(id)
                 )
@@ -70,106 +74,117 @@ class FitBuddyDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
                     SELECT id, body_part, level
                     FROM workout_categories
                 )
-                INSERT INTO exercises (name, reps_or_time, video_url, image_res_id, category_id)
-                SELECT name, reps_or_time, video_url, image_res_id, category_id
+                INSERT INTO exercises (name, reps_or_time, video_resource_name, image_resource_name, category_id)
+                SELECT name, reps_or_time, video_resource_name, image_resource_name, category_id
                 FROM (
                     -- Abs Exercises
-                    SELECT 'Crunches' as name, 'x10' as reps_or_time, NULL as video_url, ${R.drawable.ic_abs} as image_res_id,
+                    SELECT 'Crunches' as name, 'x10' as reps_or_time, 
+                           'bicycle_crunches' as video_resource_name, 
+                           'bicycle_crunches_img' as image_resource_name,
                            (SELECT id FROM category_ids WHERE body_part = 'Abs' AND level = 'Beginner') as category_id
                     UNION ALL
-                    SELECT 'Plank', '00:20', NULL, ${R.drawable.ic_abs},
+                    SELECT 'Plank', '00:20', 
+                           'plank' as video_resource_name, 
+                           'plank_img' as image_resource_name,
                            (SELECT id FROM category_ids WHERE body_part = 'Abs' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Bicycle Crunches', 'x15', NULL, ${R.drawable.ic_abs},
+                    SELECT 'Bicycle Crunches', 'x15', 
+                           'bicycle_crunches' as video_resource_name, 
+                           'bicycle_crunches_img' as image_resource_name,
                            (SELECT id FROM category_ids WHERE body_part = 'Abs' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Leg Raises', 'x12', NULL, ${R.drawable.ic_abs},
+                    SELECT 'Leg Raises', 'x12', 
+                           'leg_raises' as video_resource_name, 
+                           'leg_raises_img' as image_resource_name,
                            (SELECT id FROM category_ids WHERE body_part = 'Abs' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'V-Ups', 'x20', NULL, ${R.drawable.ic_abs},
+                    SELECT 'V-Ups', 'x20', 
+                           'v_ups' as video_resource_name, 
+                           'v_ups_img' as image_resource_name,
                            (SELECT id FROM category_ids WHERE body_part = 'Abs' AND level = 'Advanced')
                     UNION ALL
-                    SELECT 'Hanging Leg Raise', 'x15', NULL, ${R.drawable.ic_abs},
+                    SELECT 'Hanging Leg Raise', 'x15', 
+                           'hanging_leg_raises' as video_resource_name, 
+                           'hanging_leg_raises_img' as image_resource_name,
                            (SELECT id FROM category_ids WHERE body_part = 'Abs' AND level = 'Advanced')
-
-                    -- Chest Exercises
+                     -- Chest Exercises
                     UNION ALL
-                    SELECT 'Knee Push-Ups', 'x8', NULL, ${R.drawable.ic_chest},
+                    SELECT 'Knee Push-Ups', 'x8', NULL, 'knee_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Chest' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Incline Push-Ups', 'x10', NULL, ${R.drawable.ic_chest},
+                    SELECT 'Incline Push-Ups', 'x10', NULL, 'incline_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Chest' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Push-Ups', 'x15', NULL, ${R.drawable.ic_chest},
+                    SELECT 'Push-Ups', 'x15', NULL, 'pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Chest' AND level = 'Intermediate')
                     UNION ALL
                     SELECT 'Decline Push-Ups', 'x12', NULL, ${R.drawable.ic_chest},
                            (SELECT id FROM category_ids WHERE body_part = 'Chest' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Diamond Push-Ups', 'x20', NULL, ${R.drawable.ic_chest},
-                           (SELECT id FROM category_ids WHERE body_part = 'Chest' AND level = 'Advanced')
+                    SELECT 'Diamond Push-Ups', 'x12', NULL, 'diamond_pushups_img',
+                           (SELECT id FROM category_ids WHERE body_part = 'Chest' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Archer Push-Ups', 'x10', NULL, ${R.drawable.ic_chest},
+                    SELECT 'Archer Push-Ups', 'x10', NULL, 'archer_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Chest' AND level = 'Advanced')
 
                     -- Arms Exercises
                     UNION ALL
-                    SELECT 'Tricep Dips', 'x10', NULL, ${R.drawable.ic_arms},
+                    SELECT 'Tricep Dips', 'x10', NULL, 'tricep_dips_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Arms' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Wall Push-Ups', 'x12', NULL, ${R.drawable.ic_arms},
+                    SELECT 'Wall Push-Ups', 'x12', NULL, 'wall_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Arms' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Diamond Push-Ups', 'x12', NULL, ${R.drawable.ic_arms},
+                    SELECT 'Diamond Push-Ups', 'x12', NULL, 'diamond_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Arms' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Close Grip Push-Ups', 'x15', NULL, ${R.drawable.ic_arms},
+                    SELECT 'Close Grip Push-Ups', 'x15', NULL, 'close_grip_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Arms' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'One Arm Push-Ups', 'x8', NULL, ${R.drawable.ic_arms},
+                    SELECT 'One Arm Push-Ups', 'x8', NULL, 'one_arm_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Arms' AND level = 'Advanced')
                     UNION ALL
-                    SELECT 'Bench Dips', 'x20', NULL, ${R.drawable.ic_arms},
+                    SELECT 'Bench Dips', 'x20', NULL, 'bench_dips_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Arms' AND level = 'Advanced')
 
                     -- Legs Exercises
                     UNION ALL
-                    SELECT 'Squats', 'x15', NULL, ${R.drawable.ic_legs},
+                    SELECT 'Squats', 'x15', NULL, 'squats',
                            (SELECT id FROM category_ids WHERE body_part = 'Legs' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Lunges', 'x10', NULL, ${R.drawable.ic_legs},
+                    SELECT 'Lunges', 'x10', NULL, 'lunges',
                            (SELECT id FROM category_ids WHERE body_part = 'Legs' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Jump Squats', 'x12', NULL, ${R.drawable.ic_legs},
+                    SELECT 'Jump Squats', 'x12', NULL, 'jump_squat',
                            (SELECT id FROM category_ids WHERE body_part = 'Legs' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Bulgarian Split Squat', 'x10', NULL, ${R.drawable.ic_legs},
+                    SELECT 'Bulgarian Split Squat', 'x10', NULL, 'bulgarian_squat',
                            (SELECT id FROM category_ids WHERE body_part = 'Legs' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Pistol Squats', 'x8', NULL, ${R.drawable.ic_legs},
+                    SELECT 'Pistol Squats', 'x8', NULL, 'pistol_squat',
                            (SELECT id FROM category_ids WHERE body_part = 'Legs' AND level = 'Advanced')
                     UNION ALL
-                    SELECT 'Box Jumps', 'x15', NULL, ${R.drawable.ic_legs},
+                    SELECT 'Box Jumps', 'x15', NULL, 'box_jumps',
                            (SELECT id FROM category_ids WHERE body_part = 'Legs' AND level = 'Advanced')
 
                     -- Back Exercises
                     UNION ALL
-                    SELECT 'Superman', 'x12', NULL, ${R.drawable.ic_back},
+                    SELECT 'Superman', 'x12', NULL, 'superman',
                            (SELECT id FROM category_ids WHERE body_part = 'Back' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Reverse Snow Angels', 'x10', NULL, ${R.drawable.ic_back},
+                    SELECT 'Reverse Snow Angels', 'x10', NULL, 'reverse_snow_angels',
                            (SELECT id FROM category_ids WHERE body_part = 'Back' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Pull-Ups', 'x8', NULL, ${R.drawable.ic_back},
+                    SELECT 'Pull-Ups', 'x8', NULL, 'pullups',
                            (SELECT id FROM category_ids WHERE body_part = 'Back' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Inverted Rows', 'x10', NULL, ${R.drawable.ic_back},
+                    SELECT 'Inverted Rows', 'x10', NULL, 'inverted_rows',
                            (SELECT id FROM category_ids WHERE body_part = 'Back' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Archer Pull-Ups', 'x6', NULL, ${R.drawable.ic_back},
+                    SELECT 'Archer Pull-Ups', 'x6', NULL, 'archer_pullup',
                            (SELECT id FROM category_ids WHERE body_part = 'Back' AND level = 'Advanced')
                     UNION ALL
-                    SELECT 'One Arm Rows', 'x10', NULL, ${R.drawable.ic_back},
+                    SELECT 'One Arm Rows', 'x10', NULL, 'one_arm_rows',
                            (SELECT id FROM category_ids WHERE body_part = 'Back' AND level = 'Advanced')
                 ) exercises
             """.trimIndent())
@@ -222,7 +237,6 @@ class FitBuddyDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
             """.trimIndent())
             Log.d("DB", "Created full_body_challenge table")
             
-            // Verify data
             val categoriesCount = db.rawQuery("SELECT COUNT(*) FROM workout_categories", null).use {
                 if (it.moveToFirst()) it.getInt(0) else 0
             }
@@ -248,7 +262,7 @@ class FitBuddyDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
             db.execSQL("DROP TABLE IF EXISTS full_body_challenge")
             Log.d("DB", "Successfully dropped all tables")
             
-            onCreate(db)
+            createTables(db)
             Log.d("DB", "Successfully recreated all tables")
         } catch (e: Exception) {
             Log.e("DB", "Error during database upgrade: ${e.message}")

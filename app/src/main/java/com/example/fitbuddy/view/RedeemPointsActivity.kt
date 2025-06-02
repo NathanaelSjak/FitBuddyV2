@@ -50,14 +50,16 @@ class RedeemPointsActivity : AppCompatActivity() {
 
     private fun handleWorkoutUnlock(workout: WorkoutCategory) {
         val totalPoints = userProgressDao.getTotalPoints()
-        if (!workout.isUnlocked && totalPoints >= workout.pointsRequired) {
-            showUnlockConfirmationDialog(workout, totalPoints)
-        } else if (!workout.isUnlocked) {
-            Toast.makeText(
-                this,
-                "You need ${workout.pointsRequired} points to unlock ${workout.bodyPart} ${workout.level}",
-                Toast.LENGTH_SHORT
-            ).show()
+        if (!workout.isUnlocked) {
+            if (totalPoints >= workout.pointsRequired) {
+                showUnlockConfirmationDialog(workout, totalPoints)
+            } else {
+                Toast.makeText(
+                    this,
+                    "You need ${workout.pointsRequired} points to unlock ${workout.bodyPart} ${workout.level}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
@@ -76,13 +78,54 @@ class RedeemPointsActivity : AppCompatActivity() {
 
         btnCancel.setOnClickListener { dialog.dismiss() }
         btnConfirm.setOnClickListener {
-            val categoryId = workoutCategoryDao.getCategoryId(workout.bodyPart, workout.level)
-            if (categoryId != -1L && workoutCategoryDao.unlockWorkoutCategory(categoryId)) {
-                userProgressDao.updatePoints(totalPoints - workout.pointsRequired)
-                loadUnlockableWorkouts()
+            try {
+                val categoryId = workoutCategoryDao.getCategoryId(workout.bodyPart, workout.level)
+                if (categoryId != -1L) {
+                    // Double check points before unlocking
+                    val currentPoints = userProgressDao.getTotalPoints()
+                    if (currentPoints >= workout.pointsRequired) {
+                        // First deduct points
+                        val newPoints = currentPoints - workout.pointsRequired
+                        val pointsUpdated = userProgressDao.updatePoints(newPoints)
+                        
+                        if (pointsUpdated) {
+                            // Then try to unlock the workout
+                            if (workoutCategoryDao.unlockWorkoutCategory(categoryId)) {
+                                // Success - refresh UI
+                                loadUnlockableWorkouts()
+                                Toast.makeText(
+                                    this,
+                                    "${workout.bodyPart} ${workout.level} unlocked successfully!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                // Failed to unlock - refund points
+                                userProgressDao.updatePoints(currentPoints)
+                                Toast.makeText(
+                                    this,
+                                    "Failed to unlock workout. Points have been refunded.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } else {
+                            Toast.makeText(
+                                this,
+                                "Failed to deduct points. Please try again.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    } else {
+                        Toast.makeText(
+                            this,
+                            "Insufficient points to unlock this workout.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
                 Toast.makeText(
                     this,
-                    "${workout.bodyPart} ${workout.level} unlocked successfully!",
+                    "An error occurred. Please try again.",
                     Toast.LENGTH_SHORT
                 ).show()
             }

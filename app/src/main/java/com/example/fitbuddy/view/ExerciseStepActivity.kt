@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.VideoView
 import android.widget.Toast
+import android.widget.MediaController
 import androidx.appcompat.app.AppCompatActivity
 import com.example.fitbuddy.R
 import com.example.fitbuddy.data.FitBuddyDbHelper
@@ -16,6 +17,7 @@ import com.example.fitbuddy.data.UserProgressEntity
 import com.example.fitbuddy.model.Exercise
 import java.text.SimpleDateFormat
 import java.util.*
+import java.io.File
 
 class ExerciseStepActivity : AppCompatActivity() {
     private lateinit var tvTitle: TextView
@@ -43,6 +45,10 @@ class ExerciseStepActivity : AppCompatActivity() {
         tvRepsOrTime = findViewById(R.id.tvRepsOrTime)
         btnNext = findViewById(R.id.btnNextStep)
         btnSkip = findViewById(R.id.btnSkip)
+
+        val mediaController = MediaController(this)
+        mediaController.setAnchorView(videoView)
+        videoView.setMediaController(mediaController)
 
         dbHelper = FitBuddyDbHelper(this)
         userProgressDao = UserProgressDao(dbHelper)
@@ -87,13 +93,30 @@ class ExerciseStepActivity : AppCompatActivity() {
         
         tvTitle.text = exercise.name
         tvRepsOrTime.text = exercise.repsOrTime
-        if (exercise.videoUrl.isNotEmpty()) {
-            val uri = Uri.parse(exercise.videoUrl)
-            videoView.setVideoURI(uri)
-            videoView.start()
+        
+        if (!exercise.videoResourceName.isNullOrEmpty()) {
+            try {
+                val videoResId = resources.getIdentifier(
+                    exercise.videoResourceName,
+                    "raw",
+                    packageName
+                )
+                if (videoResId != 0) {
+                    val videoUri = Uri.parse("android.resource://$packageName/$videoResId")
+                    videoView.setVideoURI(videoUri)
+                    videoView.requestFocus()
+                    videoView.start()
+                } else {
+                    videoView.stopPlayback()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading video for ${exercise.name}: ${e.message}")
+                videoView.stopPlayback()
+            }
         } else {
             videoView.stopPlayback()
         }
+        
         btnNext.text = if (step == exercises.size - 1) "Finish" else "Next"
     }
 
@@ -166,6 +189,9 @@ class ExerciseStepActivity : AppCompatActivity() {
         super.onDestroy()
         if (::dbHelper.isInitialized) {
             dbHelper.close()
+        }
+        if (::videoView.isInitialized) {
+            videoView.stopPlayback()
         }
     }
 }

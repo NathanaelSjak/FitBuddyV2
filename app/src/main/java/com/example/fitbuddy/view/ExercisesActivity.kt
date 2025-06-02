@@ -15,6 +15,7 @@ import com.example.fitbuddy.data.WorkoutCategoryDao
 import android.widget.Toast
 import android.widget.TextView
 import com.example.fitbuddy.adapter.ExerciseAdapter
+import android.util.Log
 
 class ExercisesActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
@@ -27,6 +28,10 @@ class ExercisesActivity : AppCompatActivity() {
     private lateinit var exerciseDao: ExerciseDao
     private lateinit var userProgressDao: UserProgressDao
     private lateinit var workoutCategoryDao: WorkoutCategoryDao
+
+    companion object {
+        private const val TAG = "ExercisesActivity"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,7 +73,7 @@ class ExercisesActivity : AppCompatActivity() {
             recyclerView.layoutManager = LinearLayoutManager(this)
             recyclerView.adapter = ExerciseAdapter(exercises)
         } catch (e: Exception) {
-            android.util.Log.e("ExercisesActivity", "Error: ", e)
+            Log.e(TAG, "Error: ", e)
             Toast.makeText(this, "Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
             finish()
         }
@@ -95,12 +100,18 @@ class ExercisesActivity : AppCompatActivity() {
         val exerciseEntities = exerciseDao.getExercisesByCategory(categoryId)
         return exerciseEntities.map { entity ->
             Exercise(
+                id = entity.id,
                 name = entity.name,
                 repsOrTime = entity.repsOrTime,
-                videoUrl = entity.videoUrl ?: "",
-                imageResId = entity.imageResId,
+                videoResourceName = entity.videoResourceName?.let { getFullPath(it) },
+                imageResourceName = getFullPath(entity.imageResourceName),
                 level = level
             )
         }
+    }
+
+    private fun getFullPath(relativePath: String): String {
+        // Get the path to the raw directory in res
+        return "app/src/main/res/raw/$relativePath"
     }
 }

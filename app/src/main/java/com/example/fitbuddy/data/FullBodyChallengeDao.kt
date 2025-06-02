@@ -34,16 +34,13 @@ class FullBodyChallengeDao(private val dbHelper: FitBuddyDbHelper) {
         try {
             db.beginTransaction()
 
-            // List of body parts
             val bodyParts = listOf("Abs", "Chest", "Arms", "Back", "Legs")
             calendar.time = dateFormat.parse(startDate) ?: Date()
 
-            // Create schedule for each day
             while (!dateFormat.format(calendar.time).equals(endDate)) {
                 val currentDate = dateFormat.format(calendar.time)
                 
-                // Get body part for this day (cycling through the list)
-                val daysSinceStart = ((calendar.timeInMillis - dateFormat.parse(startDate)!!.time) 
+                val daysSinceStart = ((calendar.timeInMillis - dateFormat.parse(startDate)!!.time)
                     / (24 * 60 * 60 * 1000)).toInt()
                 val bodyPart = bodyParts[daysSinceStart % bodyParts.size]
 

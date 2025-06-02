@@ -4,11 +4,10 @@ data class ExerciseEntity(
     val id: Long = 0,
     val name: String,
     val repsOrTime: String,
-    val videoUrl: String? = null,
-    val imageResId: Int,
+    val videoResourceName: String?,
+    val imageResourceName: String,
     val categoryId: Long
 )
-
 data class UserProgressEntity(
     val id: Long = 0,
     val date: String,

@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fitbuddy.R
 import com.example.fitbuddy.model.Exercise
+import com.example.fitbuddy.util.ResourceUtil
 
 class ExerciseAdapter(private val exercises: List<Exercise>) : 
     RecyclerView.Adapter<ExerciseAdapter.ViewHolder>() {
@@ -19,13 +20,15 @@ class ExerciseAdapter(private val exercises: List<Exercise>) :
         val exerciseLevel: TextView = view.findViewById(R.id.exerciseLevel)
 
         fun bind(exercise: Exercise) {
-            exerciseImage.setImageResource(exercise.imageResId)
+            val context = itemView.context
+            val imageResId = ResourceUtil.getRawResourceId(context, exercise.imageResourceName)
+            exerciseImage.setImageResource(imageResId)
+            
             exerciseName.text = exercise.name
             exerciseReps.text = exercise.repsOrTime
             exerciseLevel.text = exercise.level
             
             // Set color based on level
-            val context = itemView.context
             val levelColor = when (exercise.level) {
                 "Beginner" -> context.getColor(R.color.light_blue)
                 "Intermediate" -> context.getColor(R.color.gold_yellow)
