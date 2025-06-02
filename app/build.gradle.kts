@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.firebase.database.ktx)
     // SafetyNet for reCAPTCHA
     implementation("com.google.android.gms:play-services-safetynet:18.0.1")
+    implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
     // Lifecycle
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

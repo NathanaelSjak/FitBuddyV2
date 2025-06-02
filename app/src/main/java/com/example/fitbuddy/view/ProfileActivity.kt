@@ -42,28 +42,31 @@ class ProfileActivity : AppCompatActivity() {
         if (bottomNav != null) {
             val navHome =
                 bottomNav.findViewById<android.widget.ImageView>(com.example.fitbuddy.R.id.navHome)
-            val navPlay =
-                bottomNav.findViewById<android.widget.ImageView>(com.example.fitbuddy.R.id.navPlay)
+            val navCalender =
+                bottomNav.findViewById<android.widget.ImageView>(com.example.fitbuddy.R.id.navCalender)
             val navStats =
                 bottomNav.findViewById<android.widget.ImageView>(com.example.fitbuddy.R.id.navStats)
             val navProfile =
                 bottomNav.findViewById<android.widget.ImageView>(com.example.fitbuddy.R.id.navProfile)
-            val navSettings =
-                bottomNav.findViewById<android.widget.ImageView>(com.example.fitbuddy.R.id.navSettings)
 
             navHome?.setOnClickListener {
                 startActivity(Intent(this, HomeActivity::class.java))
                 finish()
             }
 
-            navPlay?.setOnClickListener {
-                Toast.makeText(this, "Play feature coming soon", Toast.LENGTH_SHORT).show()
+            navCalender?.setOnClickListener {
+                startActivity(Intent(this, CalendarActivity::class.java))
+                finish()
             }
 
             navStats?.setOnClickListener {
-                Toast.makeText(this, "Stats feature coming soon", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(this, StatsActivity::class.java))
+                finish()
             }
-
+            navProfile?.setOnClickListener {
+                startActivity(Intent(this, ProfileActivity::class.java))
+                finish()
+            }
         }
     }
 

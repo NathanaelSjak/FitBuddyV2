@@ -74,6 +74,15 @@
         <activity
             android:name=".view.ExerciseStepActivity"
             android:exported="false" />
+        <activity
+            android:name=".view.CalendarActivity"
+            android:exported="false" />
+        <activity
+            android:name=".view.StatsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".view.RedeemPointsActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

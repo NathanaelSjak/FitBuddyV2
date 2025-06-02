@@ -30,7 +30,7 @@ class BottomNavBarActivity : AppCompatActivity() {
             finish()
         }
         
-        binding.navPlay.setOnClickListener {
+        binding.navCalender.setOnClickListener {
             Toast.makeText(this, "Play feature coming soon", Toast.LENGTH_SHORT).show()
         }
         
