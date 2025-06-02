@@ -6,16 +6,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.fitbuddy.adapter.UnlockableWorkoutAdapter
 import com.example.fitbuddy.data.FitBuddyDbHelper
-import com.example.fitbuddy.data.UnlockableWorkoutDao
+import com.example.fitbuddy.data.WorkoutCategoryDao
 import com.example.fitbuddy.data.UserProgressDao
 import com.example.fitbuddy.databinding.ActivityRedeemPointsBinding
-import com.example.fitbuddy.model.UnlockableWorkout
+import com.example.fitbuddy.model.WorkoutCategory
 
 class RedeemPointsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityRedeemPointsBinding
     private lateinit var userProgressDao: UserProgressDao
-    private lateinit var unlockableWorkoutDao: UnlockableWorkoutDao
-    private val unlockableWorkouts = mutableListOf<UnlockableWorkout>()
+    private lateinit var workoutCategoryDao: WorkoutCategoryDao
     private lateinit var adapter: UnlockableWorkoutAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,7 +24,7 @@ class RedeemPointsActivity : AppCompatActivity() {
 
         val dbHelper = FitBuddyDbHelper(this)
         userProgressDao = UserProgressDao(dbHelper)
-        unlockableWorkoutDao = UnlockableWorkoutDao(dbHelper)
+        workoutCategoryDao = WorkoutCategoryDao(dbHelper)
 
         setupViews()
         loadUnlockableWorkouts()
@@ -39,18 +38,26 @@ class RedeemPointsActivity : AppCompatActivity() {
                 finish()
             }
 
-            adapter = UnlockableWorkoutAdapter(unlockableWorkouts) { workout ->
+            adapter = UnlockableWorkoutAdapter(emptyList()) { workout ->
                 handleWorkoutUnlock(workout)
             }
             rvUnlockableWorkouts.adapter = adapter
         }
     }
 
-    private fun handleWorkoutUnlock(workout: UnlockableWorkout) {
+    private fun handleWorkoutUnlock(workout: WorkoutCategory) {
         val totalPoints = userProgressDao.getTotalPoints()
         if (!workout.isUnlocked && totalPoints >= workout.pointsRequired) {
-            unlockWorkout(workout)
-            binding.tvPoints.text = "Available Points: ${totalPoints - workout.pointsRequired}"
+            val categoryId = workoutCategoryDao.getCategoryId(workout.bodyPart, workout.level)
+            if (categoryId != -1L && workoutCategoryDao.unlockWorkoutCategory(categoryId)) {
+                userProgressDao.updatePoints(totalPoints - workout.pointsRequired)
+                loadUnlockableWorkouts()
+                Toast.makeText(
+                    this,
+                    "${workout.bodyPart} ${workout.level} unlocked successfully!",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         } else if (!workout.isUnlocked) {
             Toast.makeText(
                 this,
@@ -62,26 +69,10 @@ class RedeemPointsActivity : AppCompatActivity() {
 
     private fun loadUnlockableWorkouts() {
         val totalPoints = userProgressDao.getTotalPoints()
-        unlockableWorkouts.clear()
+        val workouts = workoutCategoryDao.getAllWorkoutCategories()
+            .filter { !it.isUnlocked }
         
-        unlockableWorkouts.addAll(unlockableWorkoutDao.getAllUnlockableWorkouts())
-        
-        adapter.notifyDataSetChanged()
-        
+        adapter.updateWorkouts(workouts)
         binding.tvPoints.text = "Available Points: $totalPoints"
-    }
-
-    private fun unlockWorkout(workout: UnlockableWorkout) {
-        unlockableWorkoutDao.unlockWorkout(workout.bodyPart, workout.level)
-        
-        // Update the UI
-        workout.isUnlocked = true
-        adapter.notifyDataSetChanged()
-        
-        Toast.makeText(
-            this,
-            "${workout.bodyPart} ${workout.level} unlocked successfully!",
-            Toast.LENGTH_SHORT
-        ).show()
     }
 } 

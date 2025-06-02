@@ -73,7 +73,6 @@ class LoginActivity : AppCompatActivity() {
                 val result = authRepository.loginUser(email, password)
                 result.fold(
                     onSuccess = { user ->
-                        // Navigate to home screen
                         Toast.makeText(
                             this@LoginActivity,
                             "Success", Toast.LENGTH_SHORT

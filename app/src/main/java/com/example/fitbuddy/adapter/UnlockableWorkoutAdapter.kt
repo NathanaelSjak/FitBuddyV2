@@ -1,66 +1,49 @@
 package com.example.fitbuddy.adapter
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
-import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.fitbuddy.R
-import com.example.fitbuddy.model.UnlockableWorkout
-import com.google.android.material.button.MaterialButton
+import com.example.fitbuddy.databinding.ItemUnlockableWorkoutBinding
+import com.example.fitbuddy.model.WorkoutCategory
 
 class UnlockableWorkoutAdapter(
-    private val workouts: List<UnlockableWorkout>,
-    private val onUnlockClick: (UnlockableWorkout) -> Unit
-) : RecyclerView.Adapter<UnlockableWorkoutAdapter.ViewHolder>() {
+    private var workouts: List<WorkoutCategory>,
+    private val onWorkoutClick: (WorkoutCategory) -> Unit
+) : RecyclerView.Adapter<UnlockableWorkoutAdapter.WorkoutViewHolder>() {
 
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val cardView: CardView = view.findViewById(R.id.cardWorkout)
-        val ivWorkout: ImageView = view.findViewById(R.id.ivWorkout)
-        val tvBodyPart: TextView = view.findViewById(R.id.tvBodyPart)
-        val tvLevel: TextView = view.findViewById(R.id.tvLevel)
-        val tvDescription: TextView = view.findViewById(R.id.tvDescription)
-        val tvPoints: TextView = view.findViewById(R.id.tvPointsRequired)
-        val btnUnlock: MaterialButton = view.findViewById(R.id.btnUnlock)
-    }
+    inner class WorkoutViewHolder(private val binding: ItemUnlockableWorkoutBinding) :
+        RecyclerView.ViewHolder(binding.root) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_unlockable_workout, parent, false)
-        return ViewHolder(view)
-    }
+        fun bind(workout: WorkoutCategory) {
+            binding.apply {
+                tvWorkoutName.text = workout.bodyPart
+                tvWorkoutLevel.text = workout.level
+                tvPointsRequired.text = "${workout.pointsRequired} points"
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val workout = workouts[position]
-        
-        holder.apply {
-            ivWorkout.setImageResource(workout.imageResId)
-            tvBodyPart.text = workout.bodyPart
-            tvLevel.text = workout.level
-            tvDescription.text = workout.description
-            tvPoints.text = "${workout.pointsRequired} Points Required"
-            
-            if (workout.isUnlocked) {
-                btnUnlock.text = "Unlocked"
-                btnUnlock.isEnabled = false
-                btnUnlock.alpha = 0.5f
-                cardView.alpha = 0.7f
-                ivWorkout.alpha = 0.5f
-            } else {
-                btnUnlock.text = "Unlock"
-                btnUnlock.isEnabled = true
-                btnUnlock.alpha = 1f
-                cardView.alpha = 1f
-                ivWorkout.alpha = 0.7f
-            }
-            
-            btnUnlock.setOnClickListener {
-                onUnlockClick(workout)
+                root.setOnClickListener {
+                    onWorkoutClick(workout)
+                }
             }
         }
     }
 
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WorkoutViewHolder {
+        val binding = ItemUnlockableWorkoutBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return WorkoutViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: WorkoutViewHolder, position: Int) {
+        holder.bind(workouts[position])
+    }
+
     override fun getItemCount() = workouts.size
+
+    fun updateWorkouts(newWorkouts: List<WorkoutCategory>) {
+        workouts = newWorkouts
+        notifyDataSetChanged()
+    }
 } 

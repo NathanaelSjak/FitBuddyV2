@@ -3,123 +3,124 @@ package com.example.fitbuddy.data
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.util.Log
 
 class FitBuddyDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+    
+    companion object {
+        const val DATABASE_NAME = "FitBuddy.db"
+        const val DATABASE_VERSION = 11
+    }
+
     override fun onCreate(db: SQLiteDatabase) {
-        // Create exercises table
-        db.execSQL("""
-            CREATE TABLE exercises (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                repsOrTime TEXT NOT NULL,
-                videoUrl TEXT,
-                imageResId INTEGER NOT NULL,
-                bodyPart TEXT NOT NULL,
-                level TEXT NOT NULL,
-                description TEXT,
-                points_required INTEGER NOT NULL DEFAULT 0
-            )
-        """)
-
-        // Create user_progress table
-        db.execSQL("""
-            CREATE TABLE user_progress (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                date TEXT NOT NULL,
-                bodyPart TEXT NOT NULL,
-                level TEXT NOT NULL,
-                completed INTEGER NOT NULL DEFAULT 0,
-                points INTEGER NOT NULL DEFAULT 0,
-                completed_at TEXT,
-                points_earned INTEGER NOT NULL DEFAULT 0
-            )
-        """)
-
-        // Create user_stats table
-        db.execSQL("""
-            CREATE TABLE user_stats (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                date TEXT NOT NULL,
-                height REAL NOT NULL,
-                weight REAL NOT NULL
-            )
-        """)
-
-        // Create unlocked_workouts table with more detailed information
-        db.execSQL("""
-            CREATE TABLE unlocked_workouts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                body_part TEXT NOT NULL,
-                level TEXT NOT NULL,
-                points_required INTEGER NOT NULL,
-                is_unlocked INTEGER NOT NULL DEFAULT 0,
-                unlocked_at TIMESTAMP,
-                UNIQUE(body_part, level)
-            )
-        """)
-
-        // Insert default unlockable workouts
-        insertDefaultUnlockableWorkouts(db)
-    }
-
-    private fun insertDefaultUnlockableWorkouts(db: SQLiteDatabase) {
-        // Insert intermediate level workouts
-        val intermediatePoints = 200
-        val advancedPoints = 500
-        val bodyParts = listOf("Abs", "Arms", "Chest", "Back", "Legs")
-
-        for (bodyPart in bodyParts) {
-            // Insert intermediate workouts
+        Log.d("DB", "Creating new database tables...")
+        
+        try {
             db.execSQL("""
-                INSERT INTO unlocked_workouts (body_part, level, points_required, is_unlocked)
-                VALUES (?, 'Intermediate', ?, 0)
-            """, arrayOf(bodyPart, intermediatePoints))
-
-            // Insert advanced workouts
-            db.execSQL("""
-                INSERT INTO unlocked_workouts (body_part, level, points_required, is_unlocked)
-                VALUES (?, 'Advanced', ?, 0)
-            """, arrayOf(bodyPart, advancedPoints))
-        }
-    }
-
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        if (oldVersion < 2) {
-            db.execSQL("ALTER TABLE user_progress ADD COLUMN completed_at TEXT")
-            db.execSQL("ALTER TABLE user_progress ADD COLUMN points_earned INTEGER NOT NULL DEFAULT 0")
-        }
-        if (oldVersion < 3) {
-            db.execSQL("""
-                CREATE TABLE IF NOT EXISTS user_stats (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    date TEXT NOT NULL,
-                    height REAL NOT NULL,
-                    weight REAL NOT NULL
-                )
-            """)
-        }
-        if (oldVersion < 4) {
-            db.execSQL("""
-                CREATE TABLE IF NOT EXISTS unlocked_workouts (
+                CREATE TABLE IF NOT EXISTS workout_categories (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     body_part TEXT NOT NULL,
                     level TEXT NOT NULL,
                     points_required INTEGER NOT NULL,
-                    is_unlocked INTEGER NOT NULL DEFAULT 0,
-                    unlocked_at TIMESTAMP,
+                    is_unlocked INTEGER DEFAULT 0,
+                    unlocked_at TEXT,
                     UNIQUE(body_part, level)
                 )
+            """.trimIndent())
+            Log.d("DB", "Created workout_categories table")
+
+            db.execSQL("""
+                INSERT OR IGNORE INTO workout_categories (body_part, level, points_required, is_unlocked)
+                VALUES 
+                    ('Abs', 'Beginner', 0, 1),
+                    ('Abs', 'Intermediate', 1000, 0),
+                    ('Abs', 'Advanced', 2500, 0),
+                    ('Chest', 'Beginner', 0, 1),
+                    ('Chest', 'Intermediate', 1000, 0),
+                    ('Chest', 'Advanced', 2500, 0),
+                    ('Arms', 'Beginner', 0, 1),
+                    ('Arms', 'Intermediate', 1000, 0),
+                    ('Arms', 'Advanced', 2500, 0),
+                    ('Back', 'Beginner', 0, 1),
+                    ('Back', 'Intermediate', 1000, 0),
+                    ('Back', 'Advanced', 2500, 0),
+                    ('Legs', 'Beginner', 0, 1),
+                    ('Legs', 'Intermediate', 1000, 0),
+                    ('Legs', 'Advanced', 2500, 0)
+            """.trimIndent())
+            Log.d("DB", "Initialized workout categories")
+
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS exercises (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    reps_or_time TEXT NOT NULL,
+                    video_url TEXT,
+                    image_res_id INTEGER NOT NULL,
+                    category_id INTEGER NOT NULL,
+                    FOREIGN KEY(category_id) REFERENCES workout_categories(id)
+                )
+            """.trimIndent())
+            Log.d("DB", "Created exercises table")
+
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS user_progress (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    category_id INTEGER,
+                    body_part TEXT NOT NULL,
+                    level TEXT NOT NULL,
+                    date TEXT NOT NULL,
+                    completed INTEGER DEFAULT 0,
+                    points INTEGER DEFAULT 0,
+                    completed_at TEXT,
+                    points_earned INTEGER DEFAULT 0,
+                    FOREIGN KEY(category_id) REFERENCES workout_categories(id)
+                )
+            """.trimIndent())
+            Log.d("DB", "Created user_progress table")
+
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS user_stats (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    date TEXT NOT NULL,
+                    height REAL NOT NULL DEFAULT 0,
+                    weight REAL NOT NULL DEFAULT 0,
+                    points INTEGER DEFAULT 0
+                )
+            """.trimIndent())
+            Log.d("DB", "Created user_stats table")
+
+            db.execSQL("""
+                INSERT OR IGNORE INTO user_stats (id, date, points) 
+                VALUES (1, date('now'), 0)
             """)
-            insertDefaultUnlockableWorkouts(db)
-        }
-        if (oldVersion < 5) {
-            db.execSQL("ALTER TABLE exercises ADD COLUMN description TEXT")
-            db.execSQL("ALTER TABLE exercises ADD COLUMN points_required INTEGER NOT NULL DEFAULT 0")
+            Log.d("DB", "Initialized user_stats with default values")
+            
+        } catch (e: Exception) {
+            Log.e("DB", "Error creating database tables: ${e.message}")
+            e.printStackTrace()
         }
     }
 
-    companion object {
-        const val DATABASE_NAME = "fitbuddy.db"
-        const val DATABASE_VERSION = 5
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        Log.d("DB", "Upgrading database from version $oldVersion to $newVersion")
+        
+        try {
+            db.execSQL("DROP TABLE IF EXISTS exercises")
+            db.execSQL("DROP TABLE IF EXISTS user_progress")
+            db.execSQL("DROP TABLE IF EXISTS workout_categories")
+            db.execSQL("DROP TABLE IF EXISTS user_stats")
+            Log.d("DB", "Successfully dropped all tables")
+            
+            onCreate(db)
+            Log.d("DB", "Successfully recreated all tables")
+        } catch (e: Exception) {
+            Log.e("DB", "Error during database upgrade: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
+    override fun onDowngrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        onUpgrade(db, oldVersion, newVersion)
     }
 }

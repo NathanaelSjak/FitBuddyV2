@@ -46,16 +46,13 @@ class RegisterActivity : AppCompatActivity() {
         unselectedOption: LinearLayout
     ) {
         selectedGender = gender
-        // Update selected option background
         (selectedOption.getChildAt(0) as CardView).setCardBackgroundColor(getColor(R.color.gold_yellow))
-        // Update unselected option background
         (unselectedOption.getChildAt(0) as CardView).setCardBackgroundColor(getColor(R.color.transparent_white))
     }
 
     private fun setupContinueButton() {
         binding.btnContinue.setOnClickListener {
             if (validateInputs()) {
-                // Save data to shared preferences or pass to next activity
                 val intent = Intent(this, RegisterActivity2::class.java).apply {
                     putExtra("gender", selectedGender)
                     putExtra("age", binding.etAge.text.toString().toInt())

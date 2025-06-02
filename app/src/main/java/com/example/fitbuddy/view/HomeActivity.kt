@@ -24,6 +24,11 @@ import java.util.*
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import android.app.Dialog
+import androidx.cardview.widget.CardView
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.fitbuddy.adapter.WorkoutCategoryAdapter
+import com.example.fitbuddy.model.WorkoutCategory
+import com.example.fitbuddy.data.WorkoutCategoryDao
 
 class HomeActivity : AppCompatActivity() {
     private var selectedLevel: String = "Beginner"
@@ -31,6 +36,8 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var dbHelper: FitBuddyDbHelper
     private lateinit var userProgressDao: UserProgressDao
     private lateinit var exerciseDao: ExerciseDao
+    private lateinit var workoutCategoryDao: WorkoutCategoryDao
+    private lateinit var workoutAdapter: WorkoutCategoryAdapter
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,11 +45,12 @@ class HomeActivity : AppCompatActivity() {
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Initialize database
         dbHelper = FitBuddyDbHelper(this)
         userProgressDao = UserProgressDao(dbHelper)
         exerciseDao = ExerciseDao(dbHelper)
+        workoutCategoryDao = WorkoutCategoryDao(dbHelper)
 
+        setupRecyclerView()
         initializeViews()
         setupBottomNavigation()
         fetchUserData()
@@ -50,15 +58,66 @@ class HomeActivity : AppCompatActivity() {
         updateUI()
 
         setupLevelSelection()
-        setupWorkoutCards()
         setupWeeklyTargetButton()
         setupViews()
     }
 
+    override fun onResume() {
+        super.onResume()
+        loadProgressData()
+        updateUI()
+        updateWorkoutList()
+    }
+
+    private fun setupRecyclerView() {
+        workoutAdapter = WorkoutCategoryAdapter(emptyList()) { workout ->
+            handleWorkoutClick(workout)
+        }
+
+        binding.rvWorkoutCategories.apply {
+            layoutManager = LinearLayoutManager(this@HomeActivity)
+            adapter = workoutAdapter
+        }
+
+        updateWorkoutList()
+    }
+
+    private fun handleWorkoutClick(workout: WorkoutCategory) {
+        if (!workout.isUnlocked) {
+            Toast.makeText(
+                this,
+                "You need ${workout.pointsRequired} points to unlock ${workout.level} ${workout.bodyPart}",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        val categoryId = workoutCategoryDao.getCategoryId(workout.bodyPart, selectedLevel)
+        if (categoryId == -1L) {
+            Toast.makeText(this, "Error: Category not found", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val exercises = exerciseDao.getExercisesByCategory(categoryId)
+        Log.d("HomeActivity", "Found ${exercises.size} exercises for ${workout.bodyPart} - $selectedLevel")
+        
+        if (exercises.isNotEmpty()) {
+            val intent = Intent(this, ExercisesActivity::class.java)
+            intent.putExtra("categoryId", categoryId)
+            intent.putExtra("level", selectedLevel)
+            intent.putExtra("bodyPart", workout.bodyPart)
+            startActivity(intent)
+        } else {
+            Toast.makeText(
+                this,
+                "No exercises available for ${workout.bodyPart} - $selectedLevel",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     private fun initializeViews() {
-        // Initialize views using binding
         binding.apply {
-            // Set up click listeners and other view initialization
         }
     }
 
@@ -67,24 +126,19 @@ class HomeActivity : AppCompatActivity() {
             tvBeginnerLevel.setOnClickListener {
                 selectedLevel = "Beginner"
                 highlightLevel(tvBeginnerLevel, tvIntermediateLevel, tvAdvancedLevel)
+                updateWorkoutList()
             }
             tvIntermediateLevel.setOnClickListener {
                 selectedLevel = "Intermediate"
                 highlightLevel(tvIntermediateLevel, tvBeginnerLevel, tvAdvancedLevel)
+                updateWorkoutList()
             }
             tvAdvancedLevel.setOnClickListener {
                 selectedLevel = "Advanced"
                 highlightLevel(tvAdvancedLevel, tvBeginnerLevel, tvIntermediateLevel)
+                updateWorkoutList()
             }
         }
-    }
-
-    private fun setupWorkoutCards() {
-        setBodyPartClickListener(R.id.absWorkoutCard, "Abs")
-        setBodyPartClickListener(R.id.chestWorkoutCard, "Chest")
-        setBodyPartClickListener(R.id.arms2WorkoutCard, "Arms")
-        setBodyPartClickListener(R.id.backWorkoutCard, "Back")
-        setBodyPartClickListener(R.id.legsWorkoutCard, "Legs")
     }
 
     private fun setupWeeklyTargetButton() {
@@ -149,10 +203,12 @@ class HomeActivity : AppCompatActivity() {
         try {
             val currentDate = dateFormat.format(Date())
             
+            val categories = workoutCategoryDao.getWorkoutCategoriesByLevel(selectedLevel)
+            val totalCategories = categories.size
+            
             val todayProgress = userProgressDao.getProgressForDate(currentDate)
             val completedToday = todayProgress.count { it.completed }
-            val totalBodyParts = 5 // Abs, Chest, Arms, Legs, Back
-            val todayPercentage = if (totalBodyParts > 0) (completedToday * 100) / totalBodyParts else 0
+            val todayPercentage = if (totalCategories > 0) (completedToday * 100) / totalCategories else 0
             
             binding.todayProgressIndicator.progress = todayPercentage
             binding.tvTodayProgressPercent.text = "$todayPercentage%"
@@ -165,7 +221,7 @@ class HomeActivity : AppCompatActivity() {
                 val date = dateFormat.format(calendar.time)
                 val dayProgress = userProgressDao.getProgressForDate(date)
                 weeklyCompleted += dayProgress.count { it.completed }
-                weeklyTotal += totalBodyParts
+                weeklyTotal += totalCategories
                 calendar.add(Calendar.DAY_OF_MONTH, -1)
             }
             
@@ -219,61 +275,20 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun highlightLevel(selected: TextView, vararg others: TextView) {
-        val totalPoints = userProgressDao.getTotalPoints()
-        val unlockedLevels = getUnlockedLevels(totalPoints)
-        
-        if (unlockedLevels.any { it.name == selected.text.toString() }) {
-            selected.setBackgroundResource(R.drawable.level_button_bg)
-            selected.setBackgroundTintList(android.content.res.ColorStateList.valueOf(resources.getColor(R.color.white)))
-            selected.setTextColor(resources.getColor(R.color.navy_blue))
-            selectedLevel = selected.text.toString()
-        } else {
-            selected.setBackgroundResource(R.drawable.level_button_bg)
-            selected.setBackgroundTintList(android.content.res.ColorStateList.valueOf(resources.getColor(R.color.white)))
-            selected.setTextColor(resources.getColor(R.color.white))
-            Toast.makeText(
-                this,
-                "This level is locked. Keep earning points to unlock it!",
-                Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
+        selected.setBackgroundResource(R.drawable.level_button_bg)
+        selected.setBackgroundTintList(android.content.res.ColorStateList.valueOf(resources.getColor(R.color.white)))
+        selected.setTextColor(resources.getColor(R.color.navy_blue))
+        selectedLevel = selected.text.toString()
         
         for (tv in others) {
-            if (unlockedLevels.any { it.name == tv.text.toString() }) {
-                tv.setBackgroundResource(0)
-                tv.setTextColor(resources.getColor(R.color.white))
-            } else {
-                tv.setBackgroundResource(R.drawable.level_button_bg)
-                tv.setBackgroundTintList(android.content.res.ColorStateList.valueOf(resources.getColor(R.color.white)))
-                tv.setTextColor(resources.getColor(R.color.white))
-            }
+            tv.setBackgroundResource(0)
+            tv.setTextColor(resources.getColor(R.color.white))
         }
     }
 
-    private fun setBodyPartClickListener(cardId: Int, bodyPart: String) {
-        findViewById<androidx.cardview.widget.CardView>(cardId)?.setOnClickListener {
-            val totalPoints = userProgressDao.getTotalPoints()
-            val unlockedLevels = getUnlockedLevels(totalPoints)
-            
-            if (unlockedLevels.any { it.name == selectedLevel }) {
-                val intent = Intent(this, ExercisesActivity::class.java)
-                intent.putExtra("level", selectedLevel)
-                intent.putExtra("bodyPart", bodyPart)
-                startActivity(intent)
-            } else {
-                val requiredPoints = when (selectedLevel) {
-                    "Intermediate" -> DifficultyLevel.INTERMEDIATE.requiredPoints
-                    "Advanced" -> DifficultyLevel.ADVANCED.requiredPoints
-                    else -> 0
-                }
-                Toast.makeText(
-                    this,
-                    "You need $requiredPoints points to unlock $selectedLevel level",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
+    private fun updateWorkoutList() {
+        val workoutCategories = workoutCategoryDao.getWorkoutCategoriesByLevel(selectedLevel)
+        workoutAdapter.updateWorkouts(workoutCategories)
     }
 
     private fun fetchUserData() {
@@ -305,7 +320,6 @@ class HomeActivity : AppCompatActivity() {
             todayProgressIndicator.max = 100
             todayProgressIndicator.progress = todayProgress
             
-            // Update completed workouts text
             tvTodayProgressPercent.text = "Completed workouts: $completedWorkouts"
             
             loadAvailableWorkouts(unlockedLevels)
@@ -334,7 +348,10 @@ class HomeActivity : AppCompatActivity() {
     private fun loadAvailableWorkouts(unlockedLevels: List<DifficultyLevel>) {
         val availableWorkouts = mutableListOf<ExerciseEntity>()
         for (level in unlockedLevels) {
-            availableWorkouts.addAll(exerciseDao.getExercises(bodyPart = "All", level = level.name))
+            val categoryId = workoutCategoryDao.getCategoryId("All", level.name)
+            if (categoryId != -1L) {
+                availableWorkouts.addAll(exerciseDao.getExercisesByCategory(categoryId))
+            }
         }
         // TODO: Create and set adapter for available workouts
     }

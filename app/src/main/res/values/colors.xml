@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="navy_blue">#1A2C56</color>
-    <color name="gold_yellow">#F8D89C</color>
-    <color name="pink_accent">#FF9BB3</color>
+    <color name="navy_blue">#1B1B2F</color>
+    <color name="navy_blue_light">#2D2D44</color>
+    <color name="gold_yellow">#FFD700</color>
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
+    <color name="gray_dark">#424242</color>
+    <color name="gray_light">#757575</color>
+    <color name="pink_accent">#FF9BB3</color>
     <color name="light_gray">#E0E0E0</color>
     <color name="transparent_white">#33FFFFFF</color>
-    <color name="navy_blue_light">#273B6A</color>
     <color name="light_blue">#E6F0FF</color>
     <color name="black_transparent">#99000000</color>
     <color name="text_secondary">#757575</color>

@@ -20,9 +20,9 @@ class ExerciseAdapter(private val exercises: List<Exercise>) : RecyclerView.Adap
     override fun getItemCount() = exercises.size
     class ExerciseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(exercise: Exercise) {
-            itemView.findViewById<TextView>(R.id.txtExerciseName).text = exercise.name
-            itemView.findViewById<TextView>(R.id.txtExerciseReps).text = exercise.repsOrTime
-            itemView.findViewById<ImageView>(R.id.imgExercise).setImageResource(exercise.imageResId)
+            itemView.findViewById<TextView>(R.id.tvExerciseName).text = exercise.name
+            itemView.findViewById<TextView>(R.id.exerciseReps).text = exercise.repsOrTime
+            itemView.findViewById<ImageView>(R.id.exerciseImage).setImageResource(exercise.imageResId)
         }
     }
 }
