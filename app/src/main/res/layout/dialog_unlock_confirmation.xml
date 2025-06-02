@@ -16,31 +16,33 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Set Weekly Target"
+            android:text="Unlock Workout"
             android:textAlignment="center"
             android:textColor="@color/white"
             android:textSize="20sp"
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/tvConfirmationMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="How many workouts do you want to complete this week?"
+            android:text="Are you sure you want to unlock this workout?"
             android:textAlignment="center"
             android:textColor="@color/white"
             android:alpha="0.7"
             android:textSize="14sp" />
 
-        <Spinner
-            android:id="@+id/spinnerWorkoutTarget"
+        <TextView
+            android:id="@+id/tvPointsCost"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@color/black_transparent"
-            android:padding="12dp"
-            android:popupBackground="@color/navy_blue"
-            android:theme="@style/SpinnerTheme" />
+            android:layout_marginTop="8dp"
+            android:text="Cost: 100 points"
+            android:textAlignment="center"
+            android:textColor="@color/gold_yellow"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -59,13 +61,13 @@
                 android:textColor="@color/white" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSave"
+                android:id="@+id/btnConfirm"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="@color/gold_yellow"
-                android:text="Save"
+                android:text="Unlock"
                 android:textColor="@color/navy_blue" />
         </LinearLayout>
     </LinearLayout>

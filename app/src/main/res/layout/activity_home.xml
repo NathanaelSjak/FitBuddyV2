@@ -348,96 +348,31 @@
                 android:id="@+id/tvTaskDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="March 11, Thur"
+                android:text="March 11, Thu"
                 android:textColor="@color/white"
                 android:alpha="0.7"
                 android:textSize="12sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvTodaysTask" />
 
-            <!-- Arms Workout Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/armsWorkoutCard"
+            <!-- Today's Task Container -->
+            <FrameLayout
+                android:id="@+id/todayTaskContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                app:cardBackgroundColor="@color/black_transparent"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:layout_constraintTop_toBottomOf="@id/tvTaskDate">
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:id="@+id/tvArmsTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="ARMS"
-                        android:textColor="@color/white"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
-                        android:id="@+id/tvArmsSubtitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Workout"
-                        android:textColor="@color/white"
-                        android:alpha="0.7"
-                        android:textSize="14sp"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/tvArmsTitle" />
-
-                    <TextView
-                        android:id="@+id/tvArmsProgress"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/progress_badge_bg"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="2dp"
-                        android:text="90%"
-                        android:textColor="@color/black"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
-                        android:id="@+id/tvArmsLevel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Beginner"
-                        android:textColor="@color/white"
-                        android:alpha="0.7"
-                        android:textSize="12sp"
-                        app:layout_constraintBottom_toBottomOf="@id/tvArmsSubtitle"
-                        app:layout_constraintEnd_toEndOf="parent" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-            </androidx.cardview.widget.CardView>
-
-            <com.google.android.material.progressindicator.LinearProgressIndicator
-                android:id="@+id/armsProgressBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:progress="90"
-                app:indicatorColor="@color/gold_yellow"
-                app:layout_constraintTop_toBottomOf="@id/armsWorkoutCard"
-                app:trackColor="@android:color/transparent"
-                app:trackThickness="4dp" />
+                android:layout_marginTop="16dp"
+                app:layout_constraintTop_toBottomOf="@id/tvTaskDate"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <!-- Level Selection -->
             <LinearLayout
                 android:id="@+id/levelSelectionLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="16dp"
                 android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/armsProgressBar">
+                app:layout_constraintTop_toBottomOf="@id/todayTaskContainer">
 
                 <TextView
                     android:id="@+id/tvBeginnerLevel"
@@ -472,13 +407,70 @@
                     android:textColor="@color/white" />
             </LinearLayout>
 
-            <!-- Workout Categories RecyclerView -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvWorkoutCategories"
+            <!-- Workout Category Cards -->
+            <LinearLayout
+                android:id="@+id/workoutCategoriesLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:layout_constraintTop_toBottomOf="@id/levelSelectionLayout" />
+                android:orientation="vertical"
+                app:layout_constraintTop_toBottomOf="@id/levelSelectionLayout">
+
+                <!-- Abs Workout Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/absWorkoutCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground"
+                    app:cardBackgroundColor="@color/navy_blue_light"
+                    app:cardCornerRadius="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Abs"
+                                android:textColor="@color/white"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Workout"
+                                android:textColor="@color/white"
+                                android:alpha="0.7"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Beginner"
+                            android:textColor="@color/white"
+                            android:alpha="0.7"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Template for other workout cards (Arms, Back, Chest, Legs) -->
+                <!-- Copy the above CardView structure and change the title for each category -->
+
+            </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>

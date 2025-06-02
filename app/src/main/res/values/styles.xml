@@ -7,4 +7,36 @@
         <item name="android:textColorPrimary">@color/navy_blue</item>
         <item name="android:windowBackground">@color/white</item>
     </style>
+
+    <style name="SpinnerTheme">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:spinnerDropDownItemStyle">@style/SpinnerDropDownItem</item>
+    </style>
+
+    <style name="SpinnerDropDownItem">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:background">@color/navy_blue</item>
+        <item name="android:padding">12dp</item>
+    </style>
+
+    <style name="CalendarViewTheme">
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/white</item>
+        <item name="android:colorBackground">@color/navy_blue_light</item>
+        <item name="android:calendarViewShown">true</item>
+        <item name="android:weekDayTextAppearance">@style/CalendarWeekText</item>
+        <item name="android:dateTextAppearance">@style/CalendarDateText</item>
+    </style>
+
+    <style name="CalendarDateText">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="CalendarWeekText">
+        <item name="android:textColor">@color/gold_yellow</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">12sp</item>
+    </style>
 </resources>

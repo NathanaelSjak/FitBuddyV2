@@ -29,6 +29,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fitbuddy.adapter.WorkoutCategoryAdapter
 import com.example.fitbuddy.model.WorkoutCategory
 import com.example.fitbuddy.data.WorkoutCategoryDao
+import android.widget.Spinner
+import android.widget.ArrayAdapter
+import com.example.fitbuddy.model.Exercise
+import android.view.View
+import android.widget.LinearLayout
+import android.util.TypedValue
+import androidx.core.content.ContextCompat
 
 class HomeActivity : AppCompatActivity() {
     private var selectedLevel: String = "Beginner"
@@ -70,15 +77,12 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
+        // Initialize the adapter but we'll use it differently
         workoutAdapter = WorkoutCategoryAdapter(emptyList()) { workout ->
             handleWorkoutClick(workout)
         }
 
-        binding.rvWorkoutCategories.apply {
-            layoutManager = LinearLayoutManager(this@HomeActivity)
-            adapter = workoutAdapter
-        }
-
+        // Initial update of workout list
         updateWorkoutList()
     }
 
@@ -152,27 +156,35 @@ class HomeActivity : AppCompatActivity() {
         dialog.setContentView(R.layout.dialog_weekly_target)
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
-        val etWorkoutTarget = dialog.findViewById<TextInputEditText>(R.id.etWorkoutTarget)
+        val spinner = dialog.findViewById<Spinner>(R.id.spinnerWorkoutTarget)
         val btnCancel = dialog.findViewById<MaterialButton>(R.id.btnCancel)
         val btnSave = dialog.findViewById<MaterialButton>(R.id.btnSave)
 
+        // Create an array of 1-7 days
+        val days = (1..7).map { "$it day${if (it > 1) "s" else ""}" }.toTypedArray()
+        
+        // Create and set the adapter
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, days)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinner.adapter = adapter
+
+        // Set the current selection
         val currentTarget = getSharedPreferences("FitBuddyPrefs", MODE_PRIVATE)
             .getInt("weekly_target", 0)
-        etWorkoutTarget.setText(if (currentTarget > 0) currentTarget.toString() else "")
+        if (currentTarget in 1..7) {
+            spinner.setSelection(currentTarget - 1)
+        }
 
         btnCancel.setOnClickListener { dialog.dismiss() }
         btnSave.setOnClickListener {
-            val target = etWorkoutTarget.text.toString().toIntOrNull()
-            if (target != null && target > 0) {
-                getSharedPreferences("FitBuddyPrefs", MODE_PRIVATE)
-                    .edit()
-                    .putInt("weekly_target", target)
-                    .apply()
-                updateWeeklyProgress()
-                dialog.dismiss()
-            } else {
-                Toast.makeText(this, "Please enter a valid number", Toast.LENGTH_SHORT).show()
-            }
+            val selectedDays = spinner.selectedItemPosition + 1
+            getSharedPreferences("FitBuddyPrefs", MODE_PRIVATE)
+                .edit()
+                .putInt("weekly_target", selectedDays)
+                .apply()
+            updateWeeklyProgress()
+            dialog.dismiss()
+            Toast.makeText(this, "Weekly target set to $selectedDays days", Toast.LENGTH_SHORT).show()
         }
 
         dialog.show()
@@ -288,7 +300,18 @@ class HomeActivity : AppCompatActivity() {
 
     private fun updateWorkoutList() {
         val workoutCategories = workoutCategoryDao.getWorkoutCategoriesByLevel(selectedLevel)
-        workoutAdapter.updateWorkouts(workoutCategories)
+        
+        // Clear existing views
+        binding.workoutCategoriesLayout.removeAllViews()
+
+        // Create cards for each category
+        workoutCategories.forEach { category ->
+            val cardView = createWorkoutCard(category.bodyPart, selectedLevel)
+            cardView.setOnClickListener {
+                handleWorkoutClick(category)
+            }
+            binding.workoutCategoriesLayout.addView(cardView)
+        }
     }
 
     private fun fetchUserData() {
@@ -361,6 +384,302 @@ class HomeActivity : AppCompatActivity() {
             btnRedeemPoints.setOnClickListener {
                 startActivity(Intent(this@HomeActivity, RedeemPointsActivity::class.java))
             }
+
+            // Full Body Challenge button - can be accessed anytime
+            btnStartChallenge.setOnClickListener {
+                startActivity(Intent(this@HomeActivity, FullBodyChallengeActivity::class.java))
+            }
+
+            // Daily Challenge card - once per day
+            dailyChallengeCard.setOnClickListener {
+                handleDailyChallenge()
+            }
+
+            // Generate daily task when the activity starts
+            generateDailyTask()
         }
+    }
+
+    private fun handleDailyChallenge() {
+        val prefs = getSharedPreferences("FitBuddyPrefs", MODE_PRIVATE)
+        val lastChallengeDate = prefs.getString("last_challenge_date", "") ?: ""
+        val currentDate = dateFormat.format(Date())
+
+        if (lastChallengeDate != currentDate) {
+            // Get a random category for daily challenge
+            val availableLevels = getAvailableLevels()
+            if (availableLevels.isNotEmpty()) {
+                val randomLevel = availableLevels.random()
+                val categories = workoutCategoryDao.getWorkoutCategoriesByLevel(randomLevel)
+                    .filter { it.isUnlocked }
+
+                if (categories.isNotEmpty()) {
+                    val randomCategory = categories.random()
+                    val categoryId = workoutCategoryDao.getCategoryId(randomCategory.bodyPart, randomLevel)
+
+                    if (categoryId != -1L) {
+                        // Start ExercisesActivity with the random category
+                        val intent = Intent(this, ExercisesActivity::class.java)
+                        intent.putExtra("categoryId", categoryId)
+                        intent.putExtra("level", randomLevel)
+                        intent.putExtra("bodyPart", randomCategory.bodyPart)
+                        intent.putExtra("isDaily", true)
+                        startActivity(intent)
+
+                        // Update last challenge date
+                        prefs.edit().putString("last_challenge_date", currentDate).apply()
+                        
+                        // Add 20 points for completing the daily challenge
+                        val currentPoints = userProgressDao.getTotalPoints()
+                        userProgressDao.updatePoints(currentPoints + 10)
+                        
+                        Toast.makeText(this, "Daily challenge completed! +10 points", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        } else {
+            Toast.makeText(this, "You've already completed today's challenge!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun getRandomUnlockedExercise(): Exercise? {
+        val availableLevels = getAvailableLevels()
+        if (availableLevels.isEmpty()) return null
+
+        val allExercises = mutableListOf<Exercise>()
+        
+        for (level in availableLevels) {
+            val categories = workoutCategoryDao.getWorkoutCategoriesByLevel(level)
+            for (category in categories.filter { it.isUnlocked }) {
+                val categoryId = workoutCategoryDao.getCategoryId(category.bodyPart, level)
+                if (categoryId != -1L) {
+                    val exercises = exerciseDao.getExercisesByCategory(categoryId)
+                    allExercises.addAll(exercises.map { entity ->
+                        Exercise(
+                            name = entity.name,
+                            repsOrTime = entity.repsOrTime,
+                            videoUrl = entity.videoUrl ?: "",
+                            imageResId = entity.imageResId,
+                            level = level
+                        )
+                    })
+                }
+            }
+        }
+
+        return if (allExercises.isNotEmpty()) allExercises.random() else null
+    }
+
+    private fun generateDailyTask() {
+        val currentDate = dateFormat.format(Date())
+        binding.tvTaskDate.text = SimpleDateFormat("MMMM dd, EEE", Locale.getDefault()).format(Date())
+        
+        // Check if daily task was already completed today
+        val prefs = getSharedPreferences("FitBuddyPrefs", MODE_PRIVATE)
+        val lastCompletedDate = prefs.getString("last_daily_task_date", "")
+        
+        if (lastCompletedDate == currentDate) {
+            // Show completed message
+            val messageView = TextView(this).apply {
+                text = "Daily task completed! Come back tomorrow for a new task."
+                setTextColor(getColor(R.color.white))
+                textSize = 16f
+                gravity = android.view.Gravity.CENTER
+                setPadding(16, 16, 16, 16)
+            }
+            binding.todayTaskContainer.removeAllViews()
+            binding.todayTaskContainer.addView(messageView)
+            return
+        }
+
+        val exercise = getRandomUnlockedExercise()
+        if (exercise != null) {
+            // Inflate the exercise card layout
+            val exerciseCard = layoutInflater.inflate(
+                R.layout.item_exercise,
+                binding.todayTaskContainer,
+                false
+            )
+
+            // Find views in the inflated layout
+            val exerciseImage = exerciseCard.findViewById<ImageView>(R.id.exerciseImage)
+            val exerciseName = exerciseCard.findViewById<TextView>(R.id.exerciseName)
+            val exerciseLevel = exerciseCard.findViewById<TextView>(R.id.exerciseLevel)
+            val exerciseReps = exerciseCard.findViewById<TextView>(R.id.exerciseReps)
+
+            // Set the exercise data
+            exerciseImage.setImageResource(exercise.imageResId)
+            exerciseName.text = exercise.name
+            exerciseLevel.text = exercise.level
+            exerciseReps.text = exercise.repsOrTime
+
+            // Set color based on level
+            val levelColor = when (exercise.level) {
+                "Beginner" -> getColor(R.color.light_blue)
+                "Intermediate" -> getColor(R.color.gold_yellow)
+                "Advanced" -> getColor(R.color.pink_accent)
+                else -> getColor(R.color.white)
+            }
+            exerciseLevel.setTextColor(levelColor)
+
+            // Add rest time based on level
+            if (exercise.level == "Intermediate") {
+                exerciseReps.text = "${exercise.repsOrTime} (60s rest)"
+            } else if (exercise.level == "Advanced") {
+                exerciseReps.text = "${exercise.repsOrTime} (30s rest)"
+            }
+
+            // Clear previous task if any and add the new one
+            binding.todayTaskContainer.removeAllViews()
+            binding.todayTaskContainer.addView(exerciseCard)
+
+            // Make the card clickable to start the exercise
+            exerciseCard.setOnClickListener {
+                val intent = Intent(this, ExerciseStepActivity::class.java).apply {
+                    putExtra("exercises", arrayListOf(exercise))
+                    putExtra("bodyPart", "Daily Task")
+                    putExtra("level", exercise.level)
+                    putExtra("isDaily", true)
+                }
+                startActivityForResult(intent, DAILY_TASK_REQUEST)
+            }
+        } else {
+            // If no exercise is available, show a message
+            val messageView = TextView(this).apply {
+                text = "Complete more workouts to unlock exercises!"
+                setTextColor(getColor(R.color.white))
+                textSize = 16f
+                gravity = android.view.Gravity.CENTER
+                setPadding(16, 16, 16, 16)
+            }
+            binding.todayTaskContainer.removeAllViews()
+            binding.todayTaskContainer.addView(messageView)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == DAILY_TASK_REQUEST && resultCode == RESULT_OK) {
+            // Update daily task completion status
+            val currentDate = dateFormat.format(Date())
+            getSharedPreferences("FitBuddyPrefs", MODE_PRIVATE)
+                .edit()
+                .putString("last_daily_task_date", currentDate)
+                .apply()
+
+            // Add points for completing daily task
+            val currentPoints = userProgressDao.getTotalPoints()
+            userProgressDao.updatePoints(currentPoints + 10)
+            
+            Toast.makeText(this, "Daily task completed! +10 points", Toast.LENGTH_SHORT).show()
+            
+            // Refresh the UI
+            generateDailyTask()
+            updateUI()
+        }
+    }
+
+    private fun createWorkoutCard(category: String, level: String): CardView {
+        val cardView = layoutInflater.inflate(
+            R.layout.item_workout_category,
+            binding.workoutCategoriesLayout,
+            false
+        ) as CardView
+
+        val titleText = cardView.findViewById<TextView>(R.id.tvCategoryTitle)
+        val levelText = cardView.findViewById<TextView>(R.id.tvCategoryLevel)
+        val lockIcon = cardView.findViewById<ImageView>(R.id.ivLockIcon)
+        val pointsRequired = cardView.findViewById<TextView>(R.id.tvPointsRequired)
+        val categoryInfo = cardView.findViewById<LinearLayout>(R.id.categoryInfo)
+
+        titleText.text = category
+        levelText.text = level
+
+        // Check if workout is locked
+        val isLocked = !workoutCategoryDao.isWorkoutUnlocked(category, level)
+        val requiredPoints = when (level) {
+            "Intermediate" -> 100
+            "Advanced" -> 250
+            else -> 0
+        }
+
+        if (isLocked) {
+            // Set alpha for the entire card content
+            categoryInfo.alpha = 0.5f
+            levelText.alpha = 0.5f
+            
+            // Show lock icon and points required
+            lockIcon.visibility = View.VISIBLE
+            pointsRequired.visibility = View.VISIBLE
+            pointsRequired.text = "+$requiredPoints points"
+
+            // Remove ripple effect for locked cards
+            cardView.foreground = null
+            cardView.setOnClickListener {
+                Toast.makeText(
+                    this,
+                    "Need $requiredPoints points to unlock $level $category workout",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        } else {
+            // Reset alpha for unlocked cards
+            categoryInfo.alpha = 1.0f
+            levelText.alpha = 0.7f // Keep the original alpha for level text
+            
+            // Hide lock elements
+            lockIcon.visibility = View.GONE
+            pointsRequired.visibility = View.GONE
+
+            // Set ripple effect for unlocked cards
+            cardView.foreground = TypedValue().apply {
+                theme.resolveAttribute(android.R.attr.selectableItemBackground, this, true)
+            }.let { typedValue ->
+                ContextCompat.getDrawable(this, typedValue.resourceId)
+            }
+
+            cardView.setOnClickListener {
+                val intent = Intent(this, ExercisesActivity::class.java)
+                intent.putExtra("level", level)
+                intent.putExtra("bodyPart", category)
+                startActivity(intent)
+            }
+        }
+
+        return cardView
+    }
+
+    private fun getAvailableLevels(): List<String> {
+        val levels = mutableListOf<String>()
+        val totalPoints = userProgressDao.getTotalPoints()
+
+        levels.add("Beginner")
+
+        if (totalPoints >= 100) {
+            levels.add("Intermediate")
+        }
+
+        if (totalPoints >= 250) {
+            levels.add("Advanced")
+        }
+
+        return levels
+    }
+
+    private fun displayDailyTask(bodyPart: String, level: String, exercises: List<ExerciseEntity>) {
+        binding.apply {
+            tvTaskDate.text = SimpleDateFormat("MMMM dd, EEE", Locale.getDefault()).format(Date())
+            tvTodaysTask.text = "Today's $level $bodyPart Workout"
+            
+            // Create workout text
+            val workoutText = exercises.joinToString("\n") { 
+                "• ${it.name}: ${it.repsOrTime}"
+            }
+            tvTodaysTask.text = workoutText
+        }
+    }
+
+    companion object {
+        private const val DAILY_TASK_REQUEST = 100
     }
 }

@@ -14,8 +14,8 @@ class WorkoutCategoryAdapter(
 ) : RecyclerView.Adapter<WorkoutCategoryAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val title: TextView = view.findViewById(R.id.tvWorkoutTitle)
-        val subtitle: TextView = view.findViewById(R.id.tvWorkoutSubtitle)
+        val title: TextView = view.findViewById(R.id.tvExerciseName)
+        val subtitle: TextView = view.findViewById(R.id.tvSubtitle)
         val level: TextView = view.findViewById(R.id.tvWorkoutLevel)
     }
 

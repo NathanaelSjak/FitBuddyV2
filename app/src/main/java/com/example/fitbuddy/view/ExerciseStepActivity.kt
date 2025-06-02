@@ -147,17 +147,18 @@ class ExerciseStepActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
             
+            if (intent.getBooleanExtra("isDaily", false)) {
+                setResult(RESULT_OK)
+            }
+            
             val intent = Intent(this, HomeActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
             finish()
+
         } catch (e: Exception) {
-            Log.e(TAG, "Error saving progress", e)
-            Toast.makeText(
-                this,
-                "Error saving progress: ${e.message}",
-                Toast.LENGTH_LONG
-            ).show()
+            Log.e(TAG, "Error saving workout progress", e)
+            Toast.makeText(this, "Error saving progress: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
         }
     }
 

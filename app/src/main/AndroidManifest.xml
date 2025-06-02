@@ -88,6 +88,9 @@
         <activity
             android:name=".view.RedeemPointsActivity"
             android:exported="false" />
+        <activity
+            android:name=".view.FullBodyChallengeActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
