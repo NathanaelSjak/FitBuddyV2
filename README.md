@@ -21,7 +21,7 @@ Aplikasi ini dibangun dengan arsitektur client-server, dimana:
 
 🧑‍💻 Anggota Kelompok
 Group 2 - Kelas LA08
-👤 Aldric Tan              - 2702241566
-👤 Brandon Alvaro Haryanto - 2702221053
-👤 Muhammad Aryo Baskoro   - 2702382221
-👤 Nathanael Sjaklif       - 2702367391
+- 👤 Aldric Tan              - 2702241566
+- 👤 Brandon Alvaro Haryanto - 2702221053
+- 👤 Muhammad Aryo Baskoro   - 2702382221
+- 👤 Nathanael Sjaklif       - 2702367391
