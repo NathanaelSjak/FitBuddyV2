@@ -10,7 +10,7 @@ class FitBuddyDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
     
     companion object {
         const val DATABASE_NAME = "FitBuddy.db"
-        const val DATABASE_VERSION = 26
+        const val DATABASE_VERSION = 31
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -79,8 +79,8 @@ class FitBuddyDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
                 FROM (
                     -- Abs Exercises
                     SELECT 'Crunches' as name, 'x10' as reps_or_time, 
-                           'bicycle_crunches' as video_resource_name, 
-                           'bicycle_crunches_img' as image_resource_name,
+                           'crunch' as video_resource_name, 
+                           'crunch_img' as image_resource_name,
                            (SELECT id FROM category_ids WHERE body_part = 'Abs' AND level = 'Beginner') as category_id
                     UNION ALL
                     SELECT 'Plank', '00:20', 
@@ -109,82 +109,82 @@ class FitBuddyDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
                            (SELECT id FROM category_ids WHERE body_part = 'Abs' AND level = 'Advanced')
                      -- Chest Exercises
                     UNION ALL
-                    SELECT 'Knee Push-Ups', 'x8', NULL, 'knee_pushups_img',
+                    SELECT 'Knee Push-Ups', 'x8', 'knee_pushups', 'knee_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Chest' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Incline Push-Ups', 'x10', NULL, 'incline_pushups_img',
+                    SELECT 'Incline Push-Ups', 'x10', 'incline_pushups', 'incline_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Chest' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Push-Ups', 'x15', NULL, 'pushups_img',
+                    SELECT 'Push-Ups', 'x15', 'pushups', 'pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Chest' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Decline Push-Ups', 'x12', NULL, ${R.drawable.ic_chest},
+                    SELECT 'Decline Push-Ups', 'x12', 'decline_pushups', 'decline_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Chest' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Diamond Push-Ups', 'x12', NULL, 'diamond_pushups_img',
+                    SELECT 'Diamond Push-Ups', 'x12', 'diamond_pushups', 'diamond_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Chest' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Archer Push-Ups', 'x10', NULL, 'archer_pushups_img',
+                    SELECT 'Archer Push-Ups', 'x10', 'archer_pushups', 'archer_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Chest' AND level = 'Advanced')
 
                     -- Arms Exercises
                     UNION ALL
-                    SELECT 'Tricep Dips', 'x10', NULL, 'tricep_dips_img',
+                    SELECT 'Tricep Dips', 'x10', 'tricep_dips', 'tricep_dips_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Arms' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Wall Push-Ups', 'x12', NULL, 'wall_pushups_img',
+                    SELECT 'Wall Push-Ups', 'x12', 'wall_pushups', 'wall_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Arms' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Diamond Push-Ups', 'x12', NULL, 'diamond_pushups_img',
+                    SELECT 'Diamond Push-Ups', 'x12', 'diamond_pushups', 'diamond_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Arms' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Close Grip Push-Ups', 'x15', NULL, 'close_grip_pushups_img',
+                    SELECT 'Close Grip Push-Ups', 'x15', 'close_grip_pushups', 'close_grip_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Arms' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'One Arm Push-Ups', 'x8', NULL, 'one_arm_pushups_img',
+                    SELECT 'One Arm Push-Ups', 'x8', 'one_arm_pushups', 'one_arm_pushups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Arms' AND level = 'Advanced')
                     UNION ALL
-                    SELECT 'Bench Dips', 'x20', NULL, 'bench_dips_img',
+                    SELECT 'Bench Dips', 'x20', 'bench_dips', 'bench_dips_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Arms' AND level = 'Advanced')
 
                     -- Legs Exercises
                     UNION ALL
-                    SELECT 'Squats', 'x15', NULL, 'squats',
+                    SELECT 'Squats', 'x15', 'squats', 'squats_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Legs' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Lunges', 'x10', NULL, 'lunges',
+                    SELECT 'Lunges', 'x10', 'lunges', 'lunges_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Legs' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Jump Squats', 'x12', NULL, 'jump_squat',
+                    SELECT 'Jump Squats', 'x12', 'jump_squat', 'jump_squat_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Legs' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Bulgarian Split Squat', 'x10', NULL, 'bulgarian_squat',
+                    SELECT 'Bulgarian Split Squat', 'x10', 'bulgarian_squat', 'bulgarian_squat_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Legs' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Pistol Squats', 'x8', NULL, 'pistol_squat',
+                    SELECT 'Pistol Squats', 'x8', 'pistol_squat', 'pistol_squat_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Legs' AND level = 'Advanced')
                     UNION ALL
-                    SELECT 'Box Jumps', 'x15', NULL, 'box_jumps',
+                    SELECT 'Box Jumps', 'x15', 'box_jumps', 'box_jumps_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Legs' AND level = 'Advanced')
 
                     -- Back Exercises
                     UNION ALL
-                    SELECT 'Superman', 'x12', NULL, 'superman',
+                    SELECT 'Superman', 'x12', 'superman', 'superman_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Back' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Reverse Snow Angels', 'x10', NULL, 'reverse_snow_angels',
+                    SELECT 'Reverse Snow Angels', 'x10', 'reverse_snow_angels', 'reverse_snow_angels_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Back' AND level = 'Beginner')
                     UNION ALL
-                    SELECT 'Pull-Ups', 'x8', NULL, 'pullups',
+                    SELECT 'Pull-Ups', 'x8', 'pullups', 'pullups_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Back' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Inverted Rows', 'x10', NULL, 'inverted_rows',
+                    SELECT 'Inverted Rows', 'x10', 'inverted_rows', 'inverted_rows_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Back' AND level = 'Intermediate')
                     UNION ALL
-                    SELECT 'Archer Pull-Ups', 'x6', NULL, 'archer_pullup',
+                    SELECT 'Archer Pull-Ups', 'x6', 'archer_pullup', 'archer_pullup_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Back' AND level = 'Advanced')
                     UNION ALL
-                    SELECT 'One Arm Rows', 'x10', NULL, 'one_arm_rows',
+                    SELECT 'One Arm Rows', 'x10', 'one_arm_row', 'one_arm_row_img',
                            (SELECT id FROM category_ids WHERE body_part = 'Back' AND level = 'Advanced')
                 ) exercises
             """.trimIndent())
@@ -193,6 +193,7 @@ class FitBuddyDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
             db.execSQL("""
                 CREATE TABLE IF NOT EXISTS user_progress (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT NOT NULL,
                     category_id INTEGER,
                     body_part TEXT NOT NULL,
                     level TEXT NOT NULL,
@@ -209,6 +210,7 @@ class FitBuddyDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
             db.execSQL("""
                 CREATE TABLE IF NOT EXISTS user_stats (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT NOT NULL,
                     date TEXT NOT NULL,
                     height REAL NOT NULL DEFAULT 0,
                     weight REAL NOT NULL DEFAULT 0,
@@ -218,8 +220,8 @@ class FitBuddyDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
             Log.d("DB", "Created user_stats table")
 
             db.execSQL("""
-                INSERT OR IGNORE INTO user_stats (id, date, points) 
-                VALUES (1, date('now'), 0)
+                INSERT OR IGNORE INTO user_stats (id, user_id, date, points) 
+                VALUES (1, 'default', date('now'), 0)
             """)
             Log.d("DB", "Initialized user_stats")
             

@@ -18,6 +18,9 @@ import com.example.fitbuddy.model.Exercise
 import java.text.SimpleDateFormat
 import java.util.*
 import java.io.File
+import com.google.firebase.auth.FirebaseAuth
+import android.content.ContentValues
+import com.google.firebase.database.FirebaseDatabase
 
 class ExerciseStepActivity : AppCompatActivity() {
     private lateinit var tvTitle: TextView
@@ -93,30 +96,40 @@ class ExerciseStepActivity : AppCompatActivity() {
         
         tvTitle.text = exercise.name
         tvRepsOrTime.text = exercise.repsOrTime
-        
+        videoView.setZOrderOnTop(true)
         if (!exercise.videoResourceName.isNullOrEmpty()) {
             try {
-                val videoResId = resources.getIdentifier(
-                    exercise.videoResourceName,
-                    "raw",
-                    packageName
-                )
+                val resourceName = exercise.videoResourceName
+                val videoResId = resources.getIdentifier(resourceName, "raw", packageName)
+                Log.d(TAG, "Trying to load video: $resourceName, resource ID: $videoResId")
                 if (videoResId != 0) {
                     val videoUri = Uri.parse("android.resource://$packageName/$videoResId")
                     videoView.setVideoURI(videoUri)
                     videoView.requestFocus()
-                    videoView.start()
+                    videoView.setOnPreparedListener { mp ->
+                        mp.isLooping = true
+                        videoView.start()
+                    }
+                    videoView.setOnErrorListener { _, what, extra ->
+                        Log.e(TAG, "Video error - what: $what, extra: $extra")
+                        Toast.makeText(this, "Error playing video", Toast.LENGTH_SHORT).show()
+                        true
+                    }
                 } else {
+                    Log.e(TAG, "Video resource not found: $resourceName")
+                    Toast.makeText(this, "Video not found", Toast.LENGTH_SHORT).show()
                     videoView.stopPlayback()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading video for ${exercise.name}: ${e.message}")
+                e.printStackTrace()
+                Toast.makeText(this, "Error loading video", Toast.LENGTH_SHORT).show()
                 videoView.stopPlayback()
             }
         } else {
+            Log.d(TAG, "No video resource for exercise: ${exercise.name}")
             videoView.stopPlayback()
         }
-        
         btnNext.text = if (step == exercises.size - 1) "Finish" else "Next"
     }
 
@@ -135,8 +148,42 @@ class ExerciseStepActivity : AppCompatActivity() {
         
         val totalPoints = basePoints * exercises.size
         Log.d(TAG, "Calculated points - Base: $basePoints, Total: $totalPoints")
+        
+        val auth = FirebaseAuth.getInstance()
+        val uid = auth.currentUser?.uid
+        var username = "User"
+        
+        if (uid != null) {
+            try {
+                val userRef = FirebaseDatabase.getInstance().getReference("users").child(uid)
+                userRef.get().addOnSuccessListener { snapshot ->
+                    username = snapshot.child("name").getValue(String::class.java) ?: "User"
+                    Log.d(TAG, "Retrieved username from Firebase: $username")
+                    
+                    userProgressDao.setCurrentUserId(username)
+                    
+                    saveProgressWithUsername(username, currentDate, completedAt, totalPoints)
+                }.addOnFailureListener { e ->
+                    Log.e(TAG, "Error getting username from Firebase", e)
+                    userProgressDao.setCurrentUserId(username)
+                    saveProgressWithUsername(username, currentDate, completedAt, totalPoints)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error accessing Firebase", e)
+                userProgressDao.setCurrentUserId(username)
+                saveProgressWithUsername(username, currentDate, completedAt, totalPoints)
+            }
+        } else {
+            userProgressDao.setCurrentUserId(username)
+            saveProgressWithUsername(username, currentDate, completedAt, totalPoints)
+        }
+    }
 
+    private fun saveProgressWithUsername(username: String, currentDate: String, completedAt: String, totalPoints: Int) {
+        Log.d(TAG, "Saving progress with username: $username")
+        
         val progress = UserProgressEntity(
+            userId = username,
             date = currentDate,
             bodyPart = bodyPart,
             level = level,
@@ -145,7 +192,6 @@ class ExerciseStepActivity : AppCompatActivity() {
             completedAt = completedAt,
             pointsEarned = totalPoints
         )
-        Log.d(TAG, "Created progress entity: $progress")
 
         try {
             if (!::dbHelper.isInitialized || !::userProgressDao.isInitialized) {
@@ -158,30 +204,31 @@ class ExerciseStepActivity : AppCompatActivity() {
             userProgressDao.insertProgress(progress)
             
             val afterPoints = userProgressDao.getTotalPoints()
-            Log.d(TAG, "Points after update: $afterPoints")
+            Log.d(TAG, "Points after update: $afterPoints, points increased by: ${afterPoints - beforePoints}")
 
-            if (afterPoints <= beforePoints) {
-                Log.w(TAG, "Points did not increase as expected")
+            runOnUiThread {
+                Toast.makeText(
+                    this, 
+                    "Workout completed! Earned $totalPoints points!", 
+                    Toast.LENGTH_SHORT
+                ).show()
+                
+                if (intent.getBooleanExtra("isDaily", false)) {
+                    val prefs = getSharedPreferences("FitBuddyPrefs", MODE_PRIVATE)
+                    prefs.edit().putString("last_daily_task_date", currentDate).apply()
+                    setResult(RESULT_OK)
+                }
+                
+                val intent = Intent(this, HomeActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+                finish()
             }
-
-            Toast.makeText(
-                this, 
-                "Workout completed! Earned $totalPoints points!", 
-                Toast.LENGTH_SHORT
-            ).show()
-            
-            if (intent.getBooleanExtra("isDaily", false)) {
-                setResult(RESULT_OK)
-            }
-            
-            val intent = Intent(this, HomeActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-
         } catch (e: Exception) {
             Log.e(TAG, "Error saving workout progress", e)
-            Toast.makeText(this, "Error saving progress: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+            runOnUiThread {
+                Toast.makeText(this, "Error saving progress: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+            }
         }
     }
 

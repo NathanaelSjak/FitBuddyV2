@@ -111,7 +111,6 @@ class ExercisesActivity : AppCompatActivity() {
     }
 
     private fun getFullPath(relativePath: String): String {
-        // Get the path to the raw directory in res
-        return "app/src/main/res/raw/$relativePath"
+        return relativePath.substringAfterLast("/")
     }
 }

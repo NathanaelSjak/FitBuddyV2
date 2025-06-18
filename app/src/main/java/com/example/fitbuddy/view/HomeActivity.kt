@@ -1,6 +1,9 @@
 package com.example.fitbuddy.view
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
@@ -48,6 +51,20 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var workoutCategoryDao: WorkoutCategoryDao
     private lateinit var workoutAdapter: WorkoutCategoryAdapter
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    private val pointsUpdateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == "com.example.fitbuddy.POINTS_UPDATED") {
+                Log.d("HomeActivity", "Received points update broadcast")
+                try {
+                    syncPointsData()
+                    loadProgressData()
+                    updateUI()
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Error processing points update", e)
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +75,11 @@ class HomeActivity : AppCompatActivity() {
         userProgressDao = UserProgressDao(dbHelper)
         exerciseDao = ExerciseDao(dbHelper)
         workoutCategoryDao = WorkoutCategoryDao(dbHelper)
+        
+        val auth = FirebaseAuth.getInstance()
+        auth.currentUser?.uid?.let {
+            userProgressDao.setCurrentUserId(it)
+        } ?: userProgressDao.setCurrentUserId("default")
 
         setupRecyclerView()
         initializeViews()
@@ -65,17 +87,44 @@ class HomeActivity : AppCompatActivity() {
         fetchUserData()
         loadProgressData()
         updateUI()
-
         setupLevelSelection()
         setupWeeklyTargetButton()
         setupViews()
-    }
+        
+        if (getSharedPreferences("FitBuddyPrefs", MODE_PRIVATE).getInt("weekly_target", 0) == 0) {
+            getSharedPreferences("FitBuddyPrefs", MODE_PRIVATE).edit().putInt("weekly_target", 7).apply()
+            updateWeeklyProgress()
+        }
+    }    private var receiverRegistered = false
 
     override fun onResume() {
         super.onResume()
         loadProgressData()
         updateUI()
         updateWorkoutList()
+        
+        if (!receiverRegistered) {
+            try {
+                registerReceiver(pointsUpdateReceiver, IntentFilter("com.example.fitbuddy.POINTS_UPDATED"))
+                receiverRegistered = true
+                Log.d("HomeActivity", "Broadcast receiver registered")
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Error registering receiver", e)
+            }
+        }
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        if (receiverRegistered) {
+            try {
+                unregisterReceiver(pointsUpdateReceiver)
+                receiverRegistered = false
+                Log.d("HomeActivity", "Broadcast receiver unregistered")
+            } catch (e: IllegalArgumentException) {
+                Log.e("HomeActivity", "Error unregistering receiver", e)
+            }
+        }
     }
 
     private fun setupRecyclerView() {
@@ -165,9 +214,8 @@ class HomeActivity : AppCompatActivity() {
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, days)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = adapter
-
         val currentTarget = getSharedPreferences("FitBuddyPrefs", MODE_PRIVATE)
-            .getInt("weekly_target", 0)
+            .getInt("weekly_target", 7)
         if (currentTarget in 1..7) {
             spinner.setSelection(currentTarget - 1)
         }
@@ -185,11 +233,9 @@ class HomeActivity : AppCompatActivity() {
         }
 
         dialog.show()
-    }
-
-    private fun updateWeeklyProgress() {
+    }    private fun updateWeeklyProgress() {
         val target = getSharedPreferences("FitBuddyPrefs", MODE_PRIVATE)
-            .getInt("weekly_target", 0)
+            .getInt("weekly_target", 7)
         
         if (target > 0) {
             val calendar = Calendar.getInstance()
@@ -237,8 +283,9 @@ class HomeActivity : AppCompatActivity() {
             val weeklyPercentage = if (weeklyTotal > 0) (weeklyCompleted * 100) / weeklyTotal else 0
             binding.weeklyProgressIndicator.progress = weeklyPercentage
             binding.tvWeeklyProgressPercent.text = "$weeklyPercentage%"
-            
             val totalPoints = userProgressDao.getTotalPoints()
+            Log.d("HomeActivity", "Updated points from DB: $totalPoints")
+            
             binding.tvChallengePoints.text = "Challenge Points: $totalPoints"
             
             val challengeProgress = if (totalPoints > 0) minOf((totalPoints * 100) / 1000, 100) else 0
@@ -307,41 +354,43 @@ class HomeActivity : AppCompatActivity() {
             }
             binding.workoutCategoriesLayout.addView(cardView)
         }
-    }
-
-    private fun fetchUserData() {
+    }    private fun fetchUserData() {
         val auth = FirebaseAuth.getInstance()
         val uid = auth.currentUser?.uid
         if (uid == null) {
             binding.tvHello.text = "Hello, Guest"
+            userProgressDao.setCurrentUserId("Guest")
             return
         }
-
+        
         val userRef = FirebaseDatabase.getInstance().getReference("users").child(uid)
-        userRef.addValueEventListener(object : ValueEventListener {
+        userRef.addValueEventListener(object : ValueEventListener {            
             override fun onDataChange(snapshot: DataSnapshot) {
                 try {
                     val name = snapshot.child("name").getValue(String::class.java)
-                    binding.tvHello.text = if (!name.isNullOrEmpty()) {
-                        "Hello, $name"
-                    } else {
-                        "Hello, User"
-                    }
+                    val username = if (!name.isNullOrEmpty()) name else "User"
+                    
+                    binding.tvHello.text = "Hello, $username"
+                    
+                    userProgressDao.setCurrentUserId(username)
+                    Log.d("HomeActivity", "Set current user ID to username: $username")
+                    
+                    loadProgressData()
+                    updateUI()
+                    updateWorkoutList()
                 } catch (e: Exception) {
                     Log.e("HomeActivity", "Error fetching user data", e)
                     binding.tvHello.text = "Hello, User"
+                    userProgressDao.setCurrentUserId("User")
                 }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
+            }            override fun onCancelled(error: DatabaseError) {
                 Log.e("HomeActivity", "Database error: ${error.message}")
                 binding.tvHello.text = "Hello, User"
+                userProgressDao.setCurrentUserId("User")
                 Toast.makeText(this@HomeActivity, "Failed to load user data", Toast.LENGTH_SHORT).show()
             }
         })
-    }
-
-    private fun updateUI() {
+    }    private fun updateUI() {
         val totalPoints = userProgressDao.getTotalPoints()
         val completedWorkouts = userProgressDao.getTotalCompletedWorkouts()
         
@@ -355,9 +404,12 @@ class HomeActivity : AppCompatActivity() {
             todayProgressIndicator.max = 100
             todayProgressIndicator.progress = todayProgress
             
-            tvTodayProgressPercent.text = "Completed workouts: $completedWorkouts"
+            tvTodayProgressPercent.text = "$completedWorkouts"
             
             loadAvailableWorkouts(unlockedLevels)
+            
+            val challengeProgress = if (totalPoints > 0) minOf((totalPoints * 100) / 1000, 100) else 0
+            challengeProgressBar.progress = challengeProgress
         }
     }
 
@@ -578,19 +630,16 @@ class HomeActivity : AppCompatActivity() {
                 .getString("last_daily_task_date", "")
 
             if (lastCompletedDate != currentDate) {
-                // Save completion date
                 getSharedPreferences("FitBuddyPrefs", MODE_PRIVATE)
                     .edit()
                     .putString("last_daily_task_date", currentDate)
                     .apply()
 
-                // Add points
                 val currentPoints = userProgressDao.getTotalPoints()
                 userProgressDao.updatePoints(currentPoints + 10)
                 
                 Toast.makeText(this, "Daily task completed! +10 points", Toast.LENGTH_SHORT).show()
                 
-                // Refresh UI
                 generateDailyTask()
                 updateUI()
             } else {
@@ -693,5 +742,37 @@ class HomeActivity : AppCompatActivity() {
 
     companion object {
         private const val DAILY_TASK_REQUEST = 100
+    }    override fun onDestroy() {
+        super.onDestroy()
+    }    private fun syncPointsData() {
+        try {
+            val db = dbHelper.readableDatabase
+            var points = 0
+            
+            var cursor = db.rawQuery(
+                "SELECT points FROM user_stats WHERE user_id = ?",
+                arrayOf(userProgressDao.getCurrentUserId())
+            )
+            
+            if (cursor.moveToFirst() && !cursor.isNull(0)) {
+                points = cursor.getInt(0)
+            }
+            cursor.close()
+            
+            Log.d("HomeActivity", "Syncing points data from DB: $points")
+            
+            binding.tvChallengePoints.text = "Challenge Points: $points"
+            
+            val challengeProgress = if (points > 0) minOf((points * 100) / 1000, 100) else 0
+            binding.challengeProgressBar.progress = challengeProgress
+            
+            val unlockedLevels = getUnlockedLevels(points)
+            loadAvailableWorkouts(unlockedLevels)
+            updateWorkoutList()
+            
+            Log.d("HomeActivity", "Points sync complete, UI updated with: $points points")
+        } catch (e: Exception) {
+            Log.e("HomeActivity", "Error syncing points data", e)
+        }
     }
 }

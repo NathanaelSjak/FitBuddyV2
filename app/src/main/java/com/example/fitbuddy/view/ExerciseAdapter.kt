@@ -31,7 +31,6 @@ class ExerciseAdapter(private val exercises: List<Exercise>) : RecyclerView.Adap
             repsTextView.text = exercise.repsOrTime
 
             try {
-                // Load image from drawable resources
                 val resId = itemView.context.resources.getIdentifier(
                     exercise.imageResourceName,
                     "drawable",

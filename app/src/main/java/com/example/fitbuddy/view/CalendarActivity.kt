@@ -2,6 +2,7 @@ package com.example.fitbuddy.view
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -12,6 +13,8 @@ import com.example.fitbuddy.data.UserProgressDao
 import com.example.fitbuddy.databinding.ActivityCalendarBinding
 import com.example.fitbuddy.adapter.WorkoutHistoryAdapter
 import com.example.fitbuddy.model.WorkoutHistory
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -24,7 +27,6 @@ class CalendarActivity : AppCompatActivity() {
     private lateinit var calendarView: RecyclerView
     private lateinit var exerciseHistoryRecyclerView: RecyclerView
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCalendarBinding.inflate(layoutInflater)
@@ -32,6 +34,27 @@ class CalendarActivity : AppCompatActivity() {
 
         dbHelper = FitBuddyDbHelper(this)
         userProgressDao = UserProgressDao(dbHelper)
+          val auth = FirebaseAuth.getInstance()
+        val uid = auth.currentUser?.uid
+        
+        if (uid != null) {
+            val userRef = FirebaseDatabase.getInstance().getReference("users").child(uid)
+            userRef.get().addOnSuccessListener { snapshot ->
+                val username = snapshot.child("name").getValue(String::class.java) ?: "User"
+                userProgressDao.setCurrentUserId(username)
+                Log.d("CalendarActivity", "Using username: $username")
+                
+                loadWorkoutHistory(selectedDate)
+            }.addOnFailureListener {
+                userProgressDao.setCurrentUserId("User")
+                Log.d("CalendarActivity", "Failed to get username, using default: User")
+                loadWorkoutHistory(selectedDate)
+            }
+        } else {
+            userProgressDao.setCurrentUserId("User")
+            Log.d("CalendarActivity", "No user logged in, using default: User")
+            loadWorkoutHistory(selectedDate)
+        }
 
         val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         selectedDate = currentDate

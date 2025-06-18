@@ -48,7 +48,6 @@ class MainActivity : AppCompatActivity() {
                     val db = dbHelper.writableDatabase
                     Log.d("DB", "Got writable database at ${db.path}")
                     
-                    // Check if database is empty
                     val cursor = db.rawQuery("SELECT COUNT(*) FROM exercises", null)
                     var exerciseCount = 0
                     if (cursor.moveToFirst()) {

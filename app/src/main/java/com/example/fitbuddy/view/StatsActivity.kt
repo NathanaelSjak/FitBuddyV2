@@ -3,6 +3,7 @@ package com.example.fitbuddy.view
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,6 +18,8 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -26,7 +29,6 @@ class StatsActivity : AppCompatActivity() {
     private lateinit var userProgressDao: UserProgressDao
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     private val displayDateFormat = SimpleDateFormat("MMM dd", Locale.getDefault())
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityStatsBinding.inflate(layoutInflater)
@@ -35,6 +37,33 @@ class StatsActivity : AppCompatActivity() {
         val dbHelper = FitBuddyDbHelper(this)
         userStatsDao = UserStatsDao(dbHelper)
         userProgressDao = UserProgressDao(dbHelper)
+        val auth = FirebaseAuth.getInstance()
+        val uid = auth.currentUser?.uid
+        
+        if (uid != null) {
+            val userRef = FirebaseDatabase.getInstance().getReference("users").child(uid)
+            userRef.get().addOnSuccessListener { snapshot ->
+                val username = snapshot.child("name").getValue(String::class.java) ?: "User"
+                userStatsDao.setCurrentUserId(username)
+                userProgressDao.setCurrentUserId(username)
+                Log.d("StatsActivity", "Using username: $username")
+                
+                loadTodayStats()
+                loadStatsHistory()
+                updateCharts()
+            }.addOnFailureListener {
+                userStatsDao.setCurrentUserId("User")
+                userProgressDao.setCurrentUserId("User")
+                Log.d("StatsActivity", "Failed to get username, using default: User")
+                loadTodayStats()
+                loadStatsHistory()
+                updateCharts()
+            }
+        } else {
+            userStatsDao.setCurrentUserId("User")
+            userProgressDao.setCurrentUserId("User")
+            Log.d("StatsActivity", "No user logged in, using default: User")
+        }
 
         setupViews()
         setupCharts()
@@ -169,7 +198,6 @@ class StatsActivity : AppCompatActivity() {
                 finish()
             }
             findViewById<android.widget.ImageView>(com.example.fitbuddy.R.id.navStats)?.setOnClickListener {
-                // Already on Stats
             }
             findViewById<android.widget.ImageView>(com.example.fitbuddy.R.id.navProfile)?.setOnClickListener {
                 startActivity(Intent(this@StatsActivity, ProfileActivity::class.java))

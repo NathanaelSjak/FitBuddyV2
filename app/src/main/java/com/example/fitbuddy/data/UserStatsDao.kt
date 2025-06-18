@@ -2,11 +2,24 @@ package com.example.fitbuddy.data
 
 import android.content.ContentValues
 import android.database.Cursor
+import android.util.Log
 
 class UserStatsDao(private val dbHelper: FitBuddyDbHelper) {
+    private var currentUserId: String = "default"
+    
+    fun setCurrentUserId(userId: String) {
+        this.currentUserId = userId
+        Log.d("UserStatsDao", "Current user ID set to: $userId")
+    }
+    
+    fun getCurrentUserId(): String {
+        return currentUserId
+    }
+    
     fun insertStats(stats: UserStatsEntity) {
         val db = dbHelper.writableDatabase
         val values = ContentValues().apply {
+            put("user_id", currentUserId)
             put("date", stats.date)
             put("height", stats.height)
             put("weight", stats.weight)
@@ -19,8 +32,8 @@ class UserStatsDao(private val dbHelper: FitBuddyDbHelper) {
         val cursor = db.query(
             "user_stats",
             null,
-            "date = ?",
-            arrayOf(date),
+            "user_id = ? AND date = ?",
+            arrayOf(currentUserId, date),
             null, null, null
         )
         return if (cursor.moveToFirst()) {
@@ -28,15 +41,13 @@ class UserStatsDao(private val dbHelper: FitBuddyDbHelper) {
         } else {
             null
         }
-    }
-
-    fun getStatsForDateRange(startDate: String, endDate: String): List<UserStatsEntity> {
+    }    fun getStatsForDateRange(startDate: String, endDate: String): List<UserStatsEntity> {
         val db = dbHelper.readableDatabase
         val cursor = db.query(
             "user_stats",
             null,
-            "date BETWEEN ? AND ?",
-            arrayOf(startDate, endDate),
+            "user_id = ? AND date BETWEEN ? AND ?",
+            arrayOf(currentUserId, startDate, endDate),
             null, null, "date ASC"
         )
         return cursorToList(cursor)
@@ -61,4 +72,4 @@ class UserStatsDao(private val dbHelper: FitBuddyDbHelper) {
         cursor.close()
         return list
     }
-} 
+}

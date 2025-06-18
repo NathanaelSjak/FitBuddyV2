@@ -12,6 +12,7 @@ data class UserProgressEntity(
     val id: Long = 0,
     val date: String,
     val bodyPart: String,
+    val userId: String,
     val level: String,
     val completed: Boolean,
     val points: Int,

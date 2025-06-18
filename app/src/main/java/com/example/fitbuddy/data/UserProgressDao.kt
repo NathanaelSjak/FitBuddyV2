@@ -8,6 +8,17 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class UserProgressDao(private val dbHelper: FitBuddyDbHelper) {
+    private var currentUserId: String = "default"
+    
+    fun setCurrentUserId(userId: String) {
+        this.currentUserId = userId
+        Log.d("UserProgressDao", "Current user ID set to: $userId")
+    }
+    
+    fun getCurrentUserId(): String {
+        return currentUserId
+    }
+
     fun insertProgress(progress: UserProgressEntity) {
         val db = dbHelper.writableDatabase
         db.beginTransaction()
@@ -15,6 +26,7 @@ class UserProgressDao(private val dbHelper: FitBuddyDbHelper) {
             Log.d("UserProgressDao", "Inserting progress: $progress")
             
             val values = ContentValues().apply {
+                put("user_id", currentUserId)
                 put("date", progress.date)
                 put("body_part", progress.bodyPart)
                 put("level", progress.level)
@@ -49,37 +61,47 @@ class UserProgressDao(private val dbHelper: FitBuddyDbHelper) {
         val cursor = db.query(
             "user_progress",
             null,
-            "date = ?",
-            arrayOf(date),
+            "user_id = ? AND date = ?",
+            arrayOf(currentUserId, date),
             null, null, "completed_at DESC"
         )
         return cursorToList(cursor)
-    }
-
-    fun getTotalPoints(): Int {
+    }    fun getTotalPoints(): Int {
         val db = dbHelper.readableDatabase
         
         var cursor = db.rawQuery(
-            "SELECT SUM(points_earned) FROM user_progress WHERE completed = 1",
-            null
+            "SELECT points FROM user_stats WHERE user_id = ?",
+            arrayOf(currentUserId)
         )
         
         var totalPoints = if (cursor.moveToFirst() && !cursor.isNull(0)) {
             cursor.getInt(0)
         } else {
-            0
+            cursor.close()
+            cursor = db.rawQuery(
+                "SELECT SUM(points_earned) FROM user_progress WHERE user_id = ? AND completed = 1",
+                arrayOf(currentUserId)
+            )
+            
+            if (cursor.moveToFirst() && !cursor.isNull(0)) {
+                val calculatedPoints = cursor.getInt(0)
+                updatePoints(calculatedPoints)
+                calculatedPoints
+            } else {
+                0
+            }
         }
         cursor.close()
         
-        Log.d("UserProgressDao", "Total points from user_progress: $totalPoints")
+        Log.d("UserProgressDao", "Total points for user $currentUserId: $totalPoints")
         return totalPoints
     }
 
     fun getTotalCompletedWorkouts(): Int {
         val db = dbHelper.readableDatabase
         val cursor = db.rawQuery(
-            "SELECT COUNT(*) FROM user_progress WHERE completed = 1",
-            null
+            "SELECT COUNT(*) FROM user_progress WHERE user_id = ? AND completed = 1",
+            arrayOf(currentUserId)
         )
         return cursor.use { 
             if (it.moveToFirst()) it.getInt(0) else 0 
@@ -91,8 +113,8 @@ class UserProgressDao(private val dbHelper: FitBuddyDbHelper) {
         val cursor = db.query(
             "user_progress",
             null,
-            "date BETWEEN ? AND ?",
-            arrayOf(startDate, endDate),
+            "user_id = ? AND date BETWEEN ? AND ?",
+            arrayOf(currentUserId, startDate, endDate),
             null, null, "date DESC, completed_at DESC"
         )
         return cursorToList(cursor)
@@ -139,17 +161,17 @@ class UserProgressDao(private val dbHelper: FitBuddyDbHelper) {
         return cursor.use { 
             it.moveToFirst() && it.getInt(0) == 1 
         }
-    }
-
-    fun updatePoints(points: Int): Boolean {
+    }    fun updatePoints(points: Int): Boolean {
         val db = dbHelper.writableDatabase
         db.beginTransaction()
         try {
+            Log.d("UserProgressDao", "Updating points for user $currentUserId to: $points")
+            
             val cursor = db.query(
                 "user_stats",
                 arrayOf("id"),
-                "id = 1",
-                null,
+                "user_id = ?",
+                arrayOf(currentUserId),
                 null,
                 null,
                 null
@@ -157,27 +179,67 @@ class UserProgressDao(private val dbHelper: FitBuddyDbHelper) {
             
             val values = ContentValues().apply {
                 put("points", points)
+                put("user_id", currentUserId)
             }
 
-            val success = if (cursor.count > 0) {
-                val rows = db.update("user_stats", values, "id = 1", null)
-                Log.d("UserProgressDao", "Updated user_stats points, rows affected: $rows")
+            val success = if (cursor.moveToFirst()) {
+                val userId = cursor.getLong(0)
+                val rows = db.update("user_stats", values, "id = ?", arrayOf(userId.toString()))
+                Log.d("UserProgressDao", "Updated user_stats for ID: $userId, rows affected: $rows")
+                
+                val verifyQuery = db.query(
+                    "user_stats", 
+                    arrayOf("points"),
+                    "id = ?", 
+                    arrayOf(userId.toString()), 
+                    null, null, null
+                )
+                if (verifyQuery.moveToFirst()) {
+                    val verifiedPoints = verifyQuery.getInt(0)
+                    Log.d("UserProgressDao", "Verified points after update: $verifiedPoints")
+                    verifyQuery.close()
+                }
+                
                 rows > 0
             } else {
                 values.apply {
-                    put("id", 1)
                     put("date", SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()))
                     put("height", 0.0)
                     put("weight", 0.0)
                 }
                 val id = db.insert("user_stats", null, values)
                 Log.d("UserProgressDao", "Created new user_stats record with ID: $id")
+                
+                if (id != -1L) {
+                    val verifyQuery = db.query(
+                        "user_stats", 
+                        arrayOf("points"),
+                        "id = ?", 
+                        arrayOf(id.toString()), 
+                        null, null, null
+                    )
+                    if (verifyQuery.moveToFirst()) {
+                        val verifiedPoints = verifyQuery.getInt(0)
+                        Log.d("UserProgressDao", "Verified points after insert: $verifiedPoints")
+                        verifyQuery.close()
+                    }
+                }
+                
                 id != -1L
             }
             cursor.close()
             
+            try {
+                db.execSQL(
+                    "UPDATE user_stats SET points = ? WHERE user_id = ?",
+                    arrayOf(points, currentUserId)
+                )
+                Log.d("UserProgressDao", "Direct SQL update executed")
+            } catch (e: Exception) {
+                Log.e("UserProgressDao", "Direct SQL update failed", e)
+            }
+            
             db.setTransactionSuccessful()
-            Log.d("UserProgressDao", "Successfully updated points to: $points")
             return success
         } catch (e: Exception) {
             Log.e("UserProgressDao", "Error updating points: ${e.message}")
@@ -195,6 +257,7 @@ class UserProgressDao(private val dbHelper: FitBuddyDbHelper) {
                 list.add(
                     UserProgressEntity(
                         id = cursor.getLong(cursor.getColumnIndexOrThrow("id")),
+                        userId = cursor.getString(cursor.getColumnIndexOrThrow("user_id")),
                         date = cursor.getString(cursor.getColumnIndexOrThrow("date")),
                         bodyPart = cursor.getString(cursor.getColumnIndexOrThrow("body_part")),
                         level = cursor.getString(cursor.getColumnIndexOrThrow("level")),
